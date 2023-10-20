@@ -1,4 +1,4 @@
-# Trust_based_Robust_CBF
+# Trust_based_robust_CBF
 Trust aware robust CBFs
 
 Overleaf paper link
