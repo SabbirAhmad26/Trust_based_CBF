@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 def Continuity(ego):
     v_max = 40
     u_max = 5.88
@@ -11,8 +11,6 @@ def Continuity(ego):
 
     return score
 
-=======
->>>>>>> d15159632f821467f9214af0cd04d536ff96b332
 global dt
 
 def dynamic_test(ego):
@@ -53,7 +51,3 @@ dt = 0.1  # Set your global dt value here
 
 score_result = dynamic_test(ego_data)
 print("Score:", score_result)
-<<<<<<< HEAD
->>>>>>> d15159632f821467f9214af0cd04d536ff96b332
-=======
->>>>>>> d15159632f821467f9214af0cd04d536ff96b332
