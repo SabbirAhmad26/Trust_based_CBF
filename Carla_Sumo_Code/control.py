@@ -287,7 +287,7 @@ def OCBF_event(i, one, que, ip, index, position, ilc, CAV_e, geometry_road):
             phiRearEnd = one['phiRearEnd']
             v_tk = x0[1]
             x_tk = x0[0]
-            xp_tk = que.[one['see'][k]]['state'][0]  # position of cav ip
+            xp_tk = que[one['see'][k]]['state'][0]  # position of cav ip
             vp_tk = que[one['see'][k]]['state'][1]  # velocity of cav ip
             C1_a = [phiRearEnd, +1, 0, -1]
             C1_b = -deltaSafetyDistance
