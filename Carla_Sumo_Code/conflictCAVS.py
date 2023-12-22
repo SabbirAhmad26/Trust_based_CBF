@@ -31,3 +31,15 @@ def search_for_conflictCAVS(table, egocar):
     return ip, index, position
 
 
+
+import numpy as np
+
+data = [
+    np.array([1, 0, 0, 0, 2, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1]),
+    np.array([2, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 0, 2, 2]),
+    np.array([3, 0, 0, 0, 0, 0, 2, 0, 0, 1, 0, 0, 0, 3, 3]),
+    np.array([4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 4])
+]
+
+egocar ={'id': [3, 4, 8, 6, 2]}
+print(search_for_conflictCAVS(data,egocar))
