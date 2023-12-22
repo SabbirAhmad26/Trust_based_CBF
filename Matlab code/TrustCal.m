@@ -1,9 +1,6 @@
 function [ego,score,trust] = TrustCal(simindex,que,table,order,ego,order_k,k,CAV_e,trust_thereshold)
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
-if simindex == 223
-    stop = 1;
-end
 
 lambda =0.95;
 if sum(isnan(ego.scores)) == 4 || (ego.scores(1) == 1)
@@ -23,9 +20,6 @@ if sum(isnan(ego.scores)) == 4 || (ego.scores(1) == 1)
 
         %trust = min(ego.trust(1) + b/(b+r+c),1);
         trust = ego.reward/(ego.reward+ego.regret+c);
-        if ego.id(2) == 6 && score1 < 1
-            stop = 1;
-        end
     else
         score = [0,0,0,0];
         trust = 0;            
