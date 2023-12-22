@@ -25,10 +25,6 @@ for j = k - 1 : -1 : 1
     end
 end
 
-
-
-
-
 for i = 1:1: length(egocar.id) -5 +1
     index{i} = [];
     position{i} = [];
