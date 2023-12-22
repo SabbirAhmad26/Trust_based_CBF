@@ -11,8 +11,8 @@ end
 
 ip = -1;
 for j = k - 1 : -1 : 1
-    if (table{j}(30) == table{k}(30))
-        ip = table{j}(31);
+    if (table{j}(14) == table{k}(14))
+        ip = table{j}(15);
         break;
     end
 end
@@ -21,7 +21,7 @@ for i = 5 : length(egocar.id)
     flag = 0;
     for j = k - 1 : -1 : 1
         if (table{j}(egocar.id(i)+1) > 0)
-            index = [index, table{j}(31)];
+            index = [index, table{j}(15)];
             position = [position, table{j}(egocar.id(i)+1)];
             flag = 1;
             break;

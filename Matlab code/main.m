@@ -15,6 +15,8 @@ trajs(TF) = [];
 
 Excel_output = 1;
 
+pyversion('C:\Users\esabo\anaconda3\python.exe')
+
 init_queue(:,7)= 0;
 init_queue(:,8)= 0;
 init_queue(:,4)= 4/10 * init_queue(:,4);
@@ -23,7 +25,7 @@ rng("shuffle");
 Plot = 0;
 % load from vissim data
 % rng(1, 'twister');
-sc = 5;
+sc = 4;
 [init_queue,total] = ScenarioBuilder(sc);
 % total = 14;
 pen = 1; pointer =1;

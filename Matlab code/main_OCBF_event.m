@@ -285,6 +285,9 @@ for k=1:1:len
     end
     if car.que1{order(k)}.state(1) <= car.que1{order(k)}.metric(4)
         [ip, index, position] = search_for_conflictCAVS_trustversion(car.que1,car.table,car.order,k, car.que1{order(k)},MultipleConstraints,trust_thereshold);
+        % [ip, index, position] = search_for_conflictCAVS(car.table, car.que1{order(k)});
+
+        %[ip, index, position] = search_for_conflictCAVS_py(table, egocar);
         one = car.que1{order(k)};
         x0 = one.state;
         deltaSafetyDistance = car.que1{order(k)}.carlength;

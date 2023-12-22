@@ -17,8 +17,8 @@ end
 
 ip = [];
 for j = k - 1 : -1 : 1
-    if (table{j}(30) == table{k}(30))
-        ip = [ip;table{j}(31)];
+    if (table{j}(14) == table{k}(14))
+        ip = [ip;table{j}(15)];
         if (que{ip(end)}.trust(1) >= trust_th)
             break;
         end
@@ -38,7 +38,7 @@ for i = 5 : length(egocar.id)
     flag = 0;
     for j = k - 1 : -1 : 1
         if (table{j}(egocar.id(i)+1) > 0)
-            index{i-5 +1} = [index{i-5 +1}, table{j}(31)];
+            index{i-5 +1} = [index{i-5 +1}, table{j}(15)];
             position{i-5 +1} = [position{i-5 +1}, table{j}(egocar.id(i)+1)];
             flag = 1;
             if(que{index{i-5 +1}(end)}.trust(1) >= trust_th)
