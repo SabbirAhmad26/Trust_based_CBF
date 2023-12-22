@@ -13,11 +13,7 @@ from scipy.optimize import minimize
 from scipy.optimize import linprog
 from scipy.optimize import fmin_slsqp
 import numpy as np
-<<<<<<< HEAD
-from scipy.optimize import quadprog, odeint
-=======
-from scipy.optimize import odeint
->>>>>>> 98111452aaeabde1330fd809f214c85eaef990c7
+#from scipy.optimize import odeint
 from main_OCBF import second_order_model
 
 global dt, u, cnt, noise1, noise2, const1, const2, const3, const4
@@ -105,15 +101,12 @@ def OCBF_time(i, one, que, ip, index, position, ilc, geometry_road):
     vmax = 20
 
     if one['state'][0] > L:
-<<<<<<< HEAD
-        v = vMax
+        v = vmax
         u1 = 0
         x = one['state'][0] + vMax * dt
-=======
         v = vmax
         u1 = 0
         x = one['state'][0] + vmax * dt
->>>>>>> 98111452aaeabde1330fd809f214c85eaef990c7
         rt = [x, v, u1]
         return rt
 
@@ -215,15 +208,6 @@ def OCBF_time(i, one, que, ip, index, position, ilc, geometry_road):
 def OCBF_event(i, one, que, ip, index, position, ilc, CAV_e, geometry_road):
 
     L = geometry_road.L
-<<<<<<< HEAD
-    vMax = 20
-    infeasiblity = 0
-    
-    if one['state'][0] > L:
-            v = vMax
-            u1 = 0
-            x = one['state'][0] + vMax * 0.1
-=======
     vmax = 20
     infeasiblity = 0
     
@@ -231,7 +215,6 @@ def OCBF_event(i, one, que, ip, index, position, ilc, CAV_e, geometry_road):
             v = vmax
             u1 = 0
             x = one['state'][0] + vmax * 0.1
->>>>>>> 98111452aaeabde1330fd809f214c85eaef990c7
             rt = [x, v, u1]
     
     noise1 = const1 * (np.random.rand() - const2)
@@ -435,8 +418,5 @@ def OCBF_event(i, one, que, ip, index, position, ilc, CAV_e, geometry_road):
     if rt[0] < 0:
         time.sleep(1)
 
-<<<<<<< HEAD
     return rt, CAV_e, infeasiblity
-=======
-    return rt, CAV_e, infeasiblity
->>>>>>> 98111452aaeabde1330fd809f214c85eaef990c7
+
