@@ -312,8 +312,8 @@ def synchronization_loop(args):
                 # # print(result)
                 # car = result[0]
                 # pen = result[1]
-                #length = car['cars']
-                #car['order'].append(length)
+                length = car['cars']
+                np.append(car['order'], length)
                 if car['cars'] > 0:
                     order = np.zeros(len(car['que1']))
                     for j in range(len(car['que1'])):
