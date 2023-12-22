@@ -1,6 +1,6 @@
 import numpy as np
 
-def vision_test(que, egocar, k):
+def vision(que, egocar, k):
     # Constants
     precision_rate = 0.1  # Set your value for 'precision_rate' here
     R = 50
@@ -34,5 +34,5 @@ que_data = [
 egocar_data = {'realpose': [5.0, 6.0], 'prerealpose': [3.0, 4.0]}  # Replace with your actual data
 k_data = 2  # Replace with your actual data
 
-indices_result = vision_test(que_data, egocar_data, k_data)
+indices_result = vision(que_data, egocar_data, k_data)
 print("Indices:", indices_result)

@@ -1,3 +1,7 @@
+from vision import vision
+from Behavior_Specs import dynamic_test, continuity
+
+
 def calculate_trust(ego, simindex, que, table, order, k, trust_threshold, order_k):
     # Constants
     b = 1  # Set your value for 'b' here
@@ -11,7 +15,7 @@ def calculate_trust(ego, simindex, que, table, order, k, trust_threshold, order_
         if score0 > 0:
             score1 = dynamic_test(ego)
             score2 = constraint_test(simindex, que, table, order, k, ego, trust_threshold)
-            score3 = vision_test(que, ego, order_k)
+            score3 = vision(que, ego, order_k)
 
             # Calculate trust
             scores = np.array([score0, score1, score2, score3])
