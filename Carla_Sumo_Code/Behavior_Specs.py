@@ -1,3 +1,16 @@
+
+def Continuity(ego):
+    v_max = 40
+    u_max = 5.88
+    maximum_displacement = 20
+
+    if max(abs(ego['realpose'] - ego['prerealpose'])) >= maximum_displacement:
+        score = 0
+    else:
+        score = 1
+
+    return score
+
 global dt
 
 def dynamic_test(ego):

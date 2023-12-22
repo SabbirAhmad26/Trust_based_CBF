@@ -357,6 +357,7 @@ def synchronization_loop(args):
                 #angle = data_array3[int(id) - 1][simulation_step]
                 if car['que1'][int(id)]['state'][0] < 130:
                     traci.vehicle.moveToXY(id+1, "", -1, positionX, positionY, angle)
+                print(car)
 
             ids = [int(element) for element in traci.vehicle.getIDList()]
             # listid = []
