@@ -11,17 +11,17 @@ def search_for_conflictCAVS(table, egocar):
 
     ip = -1
     if k is not None:
-        for j in range(k - 1, 0, -1):
+        for j in range(k - 1, -1, -1):
             if table[j][13] == table[k][13]:
                 ip = table[j][14]
                 break
 
         for i in range(4, len(egocar['id'])):
             flag = 0
-            for j in range(k - 1, 0, -1):
-                if table[j][egocar['id'][i] + 1] > 0:
+            for j in range(k - 1, -1, -1):
+                if table[j][egocar['id'][i]] > 0:
                     index.append(table[j][14])
-                    position.append(table[j][egocar['id'][i] + 1])
+                    position.append(table[j][egocar['id'][i]])
                     flag = 1
                     break
 
@@ -46,7 +46,7 @@ def search_for_conflictCAVS_trustversion(que, table, k, egocar, multiple_constra
             break
 
     ip = []
-    for j in range(k - 1, 0, -1):
+    for j in range(k - 1, -1, -1):
         if table[j][13] == table[k][13]:
             ip.append(table[j][14])
             if que[ip[-1]]['trust'][0] >= trust_th:
@@ -58,7 +58,7 @@ def search_for_conflictCAVS_trustversion(que, table, k, egocar, multiple_constra
 
     for i, ego_id in enumerate(egocar['id'][4:], start=5):
         flag = 0
-        for j in range(k - 1, 0, -1):
+        for j in range(k - 1, -1, -1):
             if table[j][ego_id] > 0:
                 index[i - 5].append(table[j][14])
                 position[i - 5].append(table[j][ego_id])
