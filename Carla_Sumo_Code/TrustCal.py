@@ -8,6 +8,7 @@ def calculate_trust(ego, simindex, que, table, order, k, trust_threshold, order_
     b = 1  # Set your value for 'b' here
     r = 1  # Set your value for 'r' here
     c = 5
+    lambda_val = 0.95
 
     # Check conditions
     if sum(np.isnan(ego['scores'])) == 4 or ego['scores'][0] == 1:
@@ -35,26 +36,3 @@ def calculate_trust(ego, simindex, que, table, order, k, trust_threshold, order_
 
     return scores, trust
 
-
-# Example usage
-lambda_val = 0.95
-ego_data = {
-    'scores': np.array([np.nan, np.nan, np.nan, np.nan]),
-    'reward': 0.0,
-    'regret': 0.0
-}
-
-# Assume you have defined continuity, dynamic_test, constraint_test, and vision_test functions
-
-simindex_data = None  # Set your data for simindex here
-que_data = None  # Set your data for que here
-table_data = None  # Set your data for table here
-order_data = None  # Set your data for order here
-k_data = None  # Set your data for k here
-trust_threshold_data = None  # Set your data for trust_threshold here
-order_k_data = None  # Set your data for order_k here
-
-scores_result, trust_result = calculate_trust(ego_data, simindex_data, que_data, table_data, order_data, k_data,
-                                              trust_threshold_data, order_k_data)
-print("Scores:", scores_result)
-print("Trust:", trust_result)
