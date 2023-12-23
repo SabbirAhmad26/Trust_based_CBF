@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def init(total, range):
+def init(total, range_val):
     car = {
         'cars': 0,
         'cars1': 0,
