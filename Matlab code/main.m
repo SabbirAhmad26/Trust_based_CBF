@@ -15,7 +15,6 @@ trajs(TF) = [];
 
 Excel_output = 1;
 
-pyversion('C:\Users\esabo\anaconda3\python.exe')
 
 init_queue(:,7)= 0;
 init_queue(:,8)= 0;
