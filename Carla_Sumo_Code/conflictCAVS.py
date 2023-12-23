@@ -40,15 +40,15 @@ def search_for_conflictCAVS_trustversion(que, table, order, k, egocar, multiple_
     index = []
     position = []
 
-    for row in enumerate(table):
+    for i, row in enumerate(table):
         if row[0] == egocar['id'][1]:
             k = i
             break
 
     ip = []
-    for j in range(k-1, 1, -1):
-        if table[j][29] == table[k][29]:
-            ip.append(table[j][30])
+    for j in range(k - 1, 0, -1):
+        if table[j][13] == table[k][13]:
+            ip.append(table[j][14])
             if que[ip[-1]]['trust'][0] >= trust_th:
                 break
 
@@ -60,7 +60,7 @@ def search_for_conflictCAVS_trustversion(que, table, order, k, egocar, multiple_
         flag = 0
         for j in range(k - 1, 0, -1):
             if table[j][ego_id] > 0:
-                index[i - 5].append(table[j][30])
+                index[i - 5].append(table[j][14])
                 position[i - 5].append(table[j][ego_id])
                 flag = 1
                 if que[index[i - 5][-1]]['trust'][0] >= trust_th:

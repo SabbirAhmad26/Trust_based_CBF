@@ -1,4 +1,7 @@
-def getXY(origin, exit, distancecurrent, distance, j, tempx, tempy):
+import math
+
+
+def getXY(origin, exit, distancecurrent, distance, j, realpose,prerealpose):
 
     with open('Position Values for ABCD', 'r') as file:
         trajs = file.read()
@@ -54,7 +57,8 @@ def getXY(origin, exit, distancecurrent, distance, j, tempx, tempy):
         str = trajs[leftc[0] + 1:rightc[0]]
 
 
-
+    tempx = realpose[0]
+    tempy = realpose[1]
     temp = str[j].split(' ')
     angle_info = temp[3]
     tempangle = float(angle_info.replace("angle=", ''))
@@ -76,8 +80,10 @@ def getXY(origin, exit, distancecurrent, distance, j, tempx, tempy):
     t = (distancecurrent - distance) / ((x_info - tempx) ** 2 + (y_info - tempy) ** 2) ** 0.5
     xinfo = (1 - t) * tempx + t * x_info
     yinfo = (1 - t) * tempy + t * y_info
-    angleinfo = t * tempangle + (1 - t) * angle_info
+    angle_rad = math.atan2(realpose[0] - prerealpose[0], realpose[1] - prerealpose[1])
+    angle_deg = math.degrees(angle_rad)
+    angle_info = (angle_deg + 360) % 360
     
-    return xinfo, yinfo, angleinfo, distance, j
+    return xinfo, yinfo, angle_info, j
 
 ##Example
