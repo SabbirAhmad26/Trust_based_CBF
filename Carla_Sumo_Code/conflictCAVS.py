@@ -1,3 +1,4 @@
+import numpy as np
 def search_for_conflictCAVS(table, egocar):
     index = []
     position = []
@@ -29,3 +30,44 @@ def search_for_conflictCAVS(table, egocar):
                 position.append(-1)
 
     return ip, index, position
+
+def search_for_conflictCAVS_trustversion(que, table, order, k, egocar, multiple_constraints, trust_threshold):
+    if multiple_constraints == 1:
+        trust_th = trust_threshold['high']
+    else:
+        trust_th = 0
+
+    index = []
+    position = []
+
+    for i, row in enumerate(table):
+        if row[0] == egocar['id'][1]:
+            k = i
+            break
+
+    ip = []
+    for j in range(k - 1, 0, -1):
+        if table[j][13] == table[k][13]:
+            ip.append(table[j][14])
+            if que[ip[-1]]['trust'][0] >= trust_th:
+                break
+
+    for i in range(5, len(egocar['id']) + 1):
+        index.append([])
+        position.append([])
+
+    for i, ego_id in enumerate(egocar['id'][4:], start=5):
+        flag = 0
+        for j in range(k - 1, 0, -1):
+            if table[j][ego_id] > 0:
+                index[i - 5].append(table[j][14])
+                position[i - 5].append(table[j][ego_id])
+                flag = 1
+                if que[index[i - 5][-1]]['trust'][0] >= trust_th:
+                    break
+        if flag == 0:
+            index[i - 5].append(-1)
+            position[i - 5].append(-1)
+
+    return ip, index, position
+
