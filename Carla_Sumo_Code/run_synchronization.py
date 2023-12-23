@@ -287,7 +287,7 @@ def synchronization_loop(args):
     cnt = 0
     L = 300
     mode = 1
-    car, metric = init.init()
+    car, metric, CAV_e = init.init(100, 3000)
 
     try:
         while True:
