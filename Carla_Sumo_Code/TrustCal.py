@@ -1,5 +1,6 @@
+import numpy as np
 from vision import vision
-from Behavior_Specs import dynamic_test, continuity
+from Behavior_Specs import dynamic_test, continuity, constraint_test
 
 
 def calculate_trust(ego, simindex, que, table, order, k, trust_threshold, order_k):
