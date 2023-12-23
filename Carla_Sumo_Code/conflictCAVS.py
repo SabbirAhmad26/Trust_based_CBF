@@ -1,3 +1,4 @@
+import numpy as np
 def search_for_conflictCAVS(table, egocar):
     index = []
     position = []
@@ -39,13 +40,13 @@ def search_for_conflictCAVS_trustversion(que, table, order, k, egocar, multiple_
     index = []
     position = []
 
-    for i, row in enumerate(table):
+    for row in enumerate(table):
         if row[0] == egocar['id'][1]:
             k = i
             break
 
     ip = []
-    for j in range(k - 1, 0, -1):
+    for j in range(k-1, 1, -1):
         if table[j][29] == table[k][29]:
             ip.append(table[j][30])
             if que[ip[-1]]['trust'][0] >= trust_th:
@@ -69,23 +70,3 @@ def search_for_conflictCAVS_trustversion(que, table, order, k, egocar, multiple_
             position[i - 5].append(-1)
 
     return ip, index, position
-
-
-# Example usage
-que_data = [{}, {}, {}, {}]  # Replace with your actual data
-table_data = None  # Replace with your actual data
-order_data = None  # Replace with your actual data
-k_data = None  # Replace with your actual data
-egocar_data = {
-    'id': [0, 9],  # Replace with your actual data
-}
-multiple_constraints_data = 0  # Replace with your actual data
-trust_threshold_data = {'high': 0.2}  # Replace with your actual data
-
-ip_result, index_result, position_result = search_for_conflictCAVS_trustversion(que_data, table_data, order_data,
-                                                                                k_data, egocar_data,
-                                                                                multiple_constraints_data,
-                                                                                trust_threshold_data)
-print("IP:", ip_result)
-print("Index:", index_result)
-print("Position:", position_result)
