@@ -70,3 +70,4 @@ def search_for_conflictCAVS_trustversion(que, table, order, k, egocar, multiple_
             position[i - 5].append(-1)
 
     return ip, index, position
+

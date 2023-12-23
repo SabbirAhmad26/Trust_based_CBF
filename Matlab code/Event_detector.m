@@ -15,8 +15,8 @@ global s1 s2 s3 const1 const2 const3 const4
     if( ego.state(2) >= CAV_e.v_tk{ego.id(2),1}(1) + s1-noise_term_speed ||  ego.state(2) <= CAV_e.v_tk{ego.id(2),1}(1) - s1+noise_term_speed || ...
          ego.state(1) >= CAV_e.x_tk{ego.id(2),1}(1) + s2-noise_term_position ||  ego.state(1) <=CAV_e.x_tk{ego.id(2),1}(1) - s2+noise_term_position)
         flag_i=1;
-    end
-    for k = 1 : length(ip) 
+    end    
+    for  k=1 : length(ip) 
         if(que1{ip(k)}.state(2) >= CAV_e.v_tk{ego.id(2),2}(k)+s1-noise_term_speed ||  que1{ip(k)}.state(2) <= CAV_e.v_tk{ego.id(2),2}(k)-s1+noise_term_speed || ...
             que1{ip(k)}.state(1) >= CAV_e.x_tk{ego.id(2),2}(k)+s2-noise_term_position ||  que1{ip(k)}.state(1) <= CAV_e.x_tk{ego.id(2),2}(k)-s2+noise_term_position)
            flag_ip=1;
