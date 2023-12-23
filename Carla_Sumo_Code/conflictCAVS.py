@@ -58,7 +58,7 @@ def search_for_conflictCAVS_trustversion(que, table, order, k, egocar, multiple_
 
     for i, ego_id in enumerate(egocar['id'][4:], start=5):
         flag = 0
-        for j in range(k - 1, 0, -1):
+        for j in range(k-1, -1, -1):
             if table[j][ego_id] > 0:
                 index[i - 5].append(table[j][14])
                 position[i - 5].append(table[j][ego_id])
