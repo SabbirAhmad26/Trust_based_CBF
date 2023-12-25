@@ -313,30 +313,32 @@ def synchronization_loop(args):
                 CAV_e['vel'][simulation_step, id] = vi
                 CAV_e['pos'][simulation_step, id] = xi
 
-                ip, index, position = search_for_conflictCAVS(car["table"], ego)# order is from 1 to total but indices must start from 0
-                #ip, index, position = search_for_conflictCAVS_trustversion(car['que1'], car["table"], ego, 0, 0)
+                #ip, index, position = search_for_conflictCAVS(car["table"], ego)# order is from 1 to total but indices must start from 0
+                ip, index, position = search_for_conflictCAVS_trustversion(car['que1'], car["table"], ego, 1, 0)
 
 
-                if ip != -1:
-                    xip = car['que1'][int(ip)]['state'][0]
-                    vip = car['que1'][int(ip)]['state'][1]
-                    phiRearEnd = ego["phiRearEnd"]
-                    deltaSafetyDistance = ego["carlength"]
-                    k_rear = ego["k_rear"]
-                    ego["rearendconstraint"] = xip - xi - phiRearEnd * vi - deltaSafetyDistance
-                    CAV_e['rear_end_CBF'][simulation_step, id] = vip - vi -phiRearEnd*ui + k_rear * (
-                            xip - xi - phiRearEnd * vi - deltaSafetyDistance)
-                    CAV_e['rear_end'][simulation_step, id] = ego["rearendconstraint"]
+                if len(ip) > 0:
+                    if ip[0] != -1:
+                        xip = car['que1'][int(ip[0])]['state'][0]
+                        vip = car['que1'][int(ip[0])]['state'][1]
+                        phiRearEnd = ego["phiRearEnd"]
+                        deltaSafetyDistance = ego["carlength"]
+                        k_rear = ego["k_rear"]
+                        ego["rearendconstraint"] = xip - xi - phiRearEnd * vi - deltaSafetyDistance
+                        CAV_e['rear_end_CBF'][simulation_step, id] = vip - vi -phiRearEnd*ui + k_rear * (
+                                xip - xi - phiRearEnd * vi - deltaSafetyDistance)
+                        CAV_e['rear_end'][simulation_step, id] = ego["rearendconstraint"]
+
 
                 for k in range(len(index)):
-                    if index[k] == -1:
+                    if index[k][0] == -1:
                         continue
                     else:
-                        d1 = car['que1'][index[k] - 1]['metric'][position[k] + 3] - car['que1'][index[k] - 1]['state'][0]
+                        d1 = car['que1'][index[k][0] - 1]['metric'][position[k][0] + 3] - car['que1'][index[k][0] - 1]['state'][0]
                         d2 = ego['metric'][k + 4] - xi
 
-                    xic = car['que1'][index[k] -1]['state'][0]
-                    vic = car['que1'][index[k] -1]['state'][1]
+                    xic = car['que1'][index[k][0] -1]['state'][0]
+                    vic = car['que1'][index[k][0] -1]['state'][1]
                     deltaSafetyDistance = ego["carlength"]
                     phiLateral = ego['phiLateral']
                     k_lateral = ego['k_lateral'][k]
@@ -347,18 +349,31 @@ def synchronization_loop(args):
                     k_lateral*(d2 - d1 - bigPhi*vi - deltaSafetyDistance)
 
 
-                # ip_seen = -1
-                # flags = Event_detector(ego, car['que1'], ip, ip_seen, index, CAV_e)
+                ip_seen = -1
+                flags = Event_detector(ego, car['que1'], ip, ip_seen, index, CAV_e)
                 # print(flags)
                 #
                 #
-                # if 1 in flags:
-                #     CAV_e["x_tk"][id][0][0] = ego['state'][0]
-                #     CAV_e["v_tk"][id][0][0] = ego['state'][1]
+                if 1 in flags:
+                    CAV_e["x_tk"][id][0][0] = ego['state'][0]
+                    CAV_e["v_tk"][id][0][0] = ego['state'][1]
+
+                    for k in range(len(index)):
+                        for j in range(len(index[k])):
+                            if index[k][j] == -1:
+                                continue
+                            else:
+                                vic = car["que1"][index[k][j] - 1]['state'][1]
+                                xic = car["que1"][index[k][j] - 1]['state'][0]
+                                CAV_e["v_tk"][ego["id"][1]][2 + k][j] = vic
+                                CAV_e["x_tk"][ego["id"][1]][2 + k][j] = xic
+
+
+
 
                 ego['prestate'] = ego['state']
-                ego['state'] = OCBF_time(simulation_step, ego, car['que1'], ip, index, position)
-                # ego['state'], ego['infeasibility'] = OCBF_event(simulation_step, ego, car['que1'], ip, index, position, flags)
+                #ego['state'] = OCBF_time(simulation_step, ego, car['que1'], ip, index, position)
+                ego['state'], ego['infeasibility'] = OCBF_event(simulation_step, ego, car['que1'], ip, index, position, flags)
 
 
 
@@ -474,7 +489,7 @@ if __name__ == '__main__':
 
     CAV_e = synchronization_loop(arguments)
     pointer = 1
-    total = 5
+    total = 2
     dt = 0.1
     fig, axs = plt.subplots(2, figsize=(8, 10))
     while pointer <= total:
