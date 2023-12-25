@@ -28,33 +28,31 @@ def init(total, range_val):
     }
 
     CAV_e = {
-        'acc': np.zeros((range_val, total)),
-        'arrivalexit': np.zeros((total, 2)),
-        'vel': np.zeros((range_val, total)),
-        'pos': np.zeros((range_val, total)),
-        'rear_end': np.full((range_val, total), np.nan),
-        'rear_end_CBF': np.full((range_val, total), np.nan),
-        'lateral': np.full((range_val, total, 5), np.nan),
-        'lateral_CBF': np.full((range_val, total, 5), np.nan),
-        'time': np.zeros((total, 1)),
-        'fuel': np.zeros((total, 1)),
-        'energy': np.zeros((total, 1)),
-        'x_tk': np.empty((total, 8), dtype=object),
-        'v_tk': np.empty((total, 8), dtype=object),
-        'trust_tk': np.empty((total, 6), dtype=object),
-        'posx': np.zeros((range_val, total)),
-        'posy': np.zeros((range_val, total)),
-        'angle': np.zeros((range_val, total))
+        'acc': np.full((range_val, total+1), np.nan),
+        'arrivalexit': np.zeros((total+1, 2)),
+        'vel': np.full((range_val, total+1), np.nan),
+        'pos': np.full((range_val, total+1), np.nan),
+        'rear_end': np.full((range_val, total+1), np.nan),
+        'rear_end_CBF': np.full((range_val, total+1), np.nan),
+        'lateral': np.full((range_val, total+1, 5), np.nan),
+        'lateral_CBF': np.full((range_val, total+1, 5), np.nan),
+        'time': np.zeros((total+1, 1)),
+        'fuel': np.zeros((total+1, 1)),
+        'energy': np.zeros((total+1, 1)),
+        'x_tk': np.empty((total+1, 8, total)),
+        'v_tk': np.empty((total+1, 8, total)),
+        'trust_tk': np.empty((total+1, 6)),
+        'posx': np.full((range_val, total+1), np.nan),
+        'posy': np.full((range_val, total+1), np.nan),
+        'angle': np.full((range_val, total+1), np.nan)
     }
 
-    for i in range(8):
-        for j in range(total):
-            CAV_e['x_tk'][j, i] = np.zeros(total)
-            CAV_e['v_tk'][j, i] = np.zeros(total)
-
+    for id in range(total+1):
+        for i in range(0,7):
+            CAV_e['x_tk'][id][i] = np.zeros(total)
+            CAV_e['v_tk'][id][i] = np.zeros(total)
     for i in range(6):
-        for j in range(total):
-            CAV_e['trust_tk'][j, i] = np.zeros(total)
+        CAV_e['trust_tk'][:, i] = np.zeros(total+1)
 
     CAV_e['counter'] = np.zeros((total, 1))
     CAV_e['trust'] = np.zeros((range_val, total))

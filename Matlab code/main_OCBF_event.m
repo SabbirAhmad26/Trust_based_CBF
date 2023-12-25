@@ -1,7 +1,7 @@
-function [car,CAV_e] = main_OCBF_event(i, car, mod ,trust_thereshold, MultipleConstraints, CAV_e,geometry_road)
+function [car,CAV_e] = main_OCBF_event(i, car, mod ,trust_thereshold, MultipleConstraints, CAV_e)%,geometry_road)
 
 global  dt s3 u;
-L = geometry_road.L + 2*geometry_road.r + 4*geometry_road.w;
+%L = geometry_road.L + 2*geometry_road.r + 4*geometry_road.w;
 update_class_k_function = 0;
 mitigation = 0;
 trust =1;
@@ -120,7 +120,7 @@ for k = 1 : 1 : len
                 CAV_e.v_tk{car.que1{order(k)}.id(2),8}(1)=car.que1{ip_seen}.state(2);
             end
 
-            [rt, CAV_e,infeasiblity] = OCBF_event(i, car.que1{order(k)}, car.que1, ip, index, position, ilc,CAV_e,geometry_road);
+            [rt, CAV_e,infeasiblity] = OCBF_event(i, car.que1{order(k)}, car.que1, ip, index, position, ilc,CAV_e)%,geometry_road);
             CAV_e.counter = CAV_e.counter + 1;
             car.que1{order(k)}.infeasiblity = infeasiblity;
             CAV_e.buffer(car.que1{order(k)}.id(2),:)=rt;

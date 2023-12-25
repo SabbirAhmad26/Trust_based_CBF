@@ -1,32 +1,35 @@
 import numpy as np
-import time 
+import time
 import numpy as np
 from scipy.optimize import linprog
 from cvxopt import matrix, solvers, sqrt
 import cvxopt
 import cvxopt.solvers
 from scipy.integrate import odeint
-from cvxopt import matrix,sparse
+from cvxopt import matrix, sparse
 
 
 def tic():
     return time.time()
 
+
 # Function to mimic toc behavior
 def toc(start_time):
     elapsed_time = time.time() - start_time
-    #print("Elapsed time: {:.5f} seconds".format(elapsed_time))
+    # print("Elapsed time: {:.5f} seconds".format(elapsed_time))
 
-def second_order_model(x,t,a,noise1,noise2):
-    m=1
-    f0=0.1
-    f1=5
-    f2=0.25
-    dx=[0,0]
+
+def second_order_model(x, t, a, noise1, noise2):
+    m = 1
+    f0 = 0.1
+    f1 = 5
+    f2 = 0.25
+    dx = [0, 0]
     pos, vel = x
-    dx[0]= vel + noise1
-    dx[1]=(1 / m)*a + noise2
+    dx[0] = vel + noise1
+    dx[1] = (1 / m) * a + noise2
     return dx
+
 
 def search_for_conflictCAVS_new(table, egocar):
     index = []
@@ -62,10 +65,11 @@ def search_for_conflictCAVS_new(table, egocar):
             position.append(-1)
     return [ip, index, position]
 
+
 def search_i_lanechange(que, new):
     que_len = len(que)
     index = []
-    
+
     if new['id'][2] == 1:
         lane = 2
         action = 2
@@ -90,17 +94,18 @@ def search_i_lanechange(que, new):
     elif new['id'][2] == 8:
         lane = 7
         action = 3
-    
+
     for i in range(que_len, 0, -1):
         if que[i - 1]['id'][1] == new['id'][1]:
             k = i
             break
-    
+
     for i in range(k - 1, 0, -1):
         if que[i - 1]['id'][2] == lane and que[i - 1]['id'][0] == action:
             index = i
             break
     return index
+
 
 def OCBF_SecondOrderDynamics(i, one, que, ip, index, position, ilc):
     L = 300
@@ -129,7 +134,6 @@ def OCBF_SecondOrderDynamics(i, one, que, ip, index, position, ilc):
     deltaSafetyDistance = 10
     l = 7 - 3.5 * sqrt(3)
 
-
     # physical limitations on control inputs
     umax = 3
     umin = -3
@@ -144,7 +148,7 @@ def OCBF_SecondOrderDynamics(i, one, que, ip, index, position, ilc):
     # CLF
     phi0 = -eps * (x0[1] - vd) ** 2
     phi1 = 2 * (x0[1] - vd)
-    A = sparse([A, matrix([phi1,-1],(1,2))])
+    A = sparse([A, matrix([phi1, -1], (1, 2))])
     b = sparse([b, phi0])
 
     # rear-end safety constraints
@@ -159,13 +163,13 @@ def OCBF_SecondOrderDynamics(i, one, que, ip, index, position, ilc):
             p = 1
             LgB = 1
             LfB = 2 * p * (v0 - x0[1]) + p ** 2 * h
-            A=sparse([A,matrix([LgB,0],(1,2))])
+            A = sparse([A, matrix([LgB, 0], (1, 2))])
             b = matrix([b, LfB])
         else:
             LgB = phiRearEnd - (v0 - x0[1]) / uminValue
             LfB = v0 - x0[1]
             if LgB != 0:
-                A=sparse([A,matrix([LgB,0],(1,2))])
+                A = sparse([A, matrix([LgB, 0], (1, 2))])
                 b = matrix([b, LfB + hf])
 
     # lane change safety constraint
@@ -183,13 +187,13 @@ def OCBF_SecondOrderDynamics(i, one, que, ip, index, position, ilc):
             LgB = bigPhi
             LfB = v0 - x0[1] - phiLateral * x0[1] ** 2 / L
             if LgB != 0:
-                A = sparse([A,matrix([LgB,0],(1,2))])
+                A = sparse([A, matrix([LgB, 0], (1, 2))])
                 b = matrix([b, LfB + h])
         else:
             LgB = phiLateral * v0 * x0[1] / uminValue / L - (v0 - x0[1]) / uminValue
             LfB = v0 - x0[1] - phiLateral * v0 * x0[1] / L
             if LgB != 0:
-                A = sparse([A,matrix([LgB,0],(1,2))])
+                A = sparse([A, matrix([LgB, 0], (1, 2))])
                 b = matrix([b, LfB + hf])
 
     # lateral safety constraints
@@ -211,20 +215,20 @@ def OCBF_SecondOrderDynamics(i, one, que, ip, index, position, ilc):
             LgB = bigPhi
             LfB = v0 - x0[1] - phiLateral * x0[1] ** 2 / L
             if LgB != 0:
-                A = sparse([A,matrix([LgB,0],(1,2))])
+                A = sparse([A, matrix([LgB, 0], (1, 2))])
                 b = matrix([b, LfB + h])
         else:
             LgB = phiLateral * v0 * x0[1] / uminValue / L - (v0 - x0[1]) / uminValue
             LfB = v0 - x0[1] - phiLateral * v0 * x0[1] / L
             if LgB != 0:
-                A = sparse([A,matrix([LgB,0],(1,2))])
+                A = sparse([A, matrix([LgB, 0], (1, 2))])
                 b = matrix([b, LfB + hf])
 
     vmax = 15
     vmin = 0
-    A_vmax = matrix([1.0, 0.0],(1,2))  # CBF for max and min speed
+    A_vmax = matrix([1.0, 0.0], (1, 2))  # CBF for max and min speed
     b_vmax = vmax - x0[1]
-    A_vmin = matrix([-1.0, 0.0],(1,2))
+    A_vmin = matrix([-1.0, 0.0], (1, 2))
     b_vmin = x0[1] - vmin
     A = matrix([A, A_vmax, A_vmin])
     b = matrix([b, b_vmax, b_vmin])
@@ -233,10 +237,10 @@ def OCBF_SecondOrderDynamics(i, one, que, ip, index, position, ilc):
     F = matrix([-u_ref, 0.0])
 
     options = {'show_progress': False}
-    sol = cvxopt.solvers.qp(matrix(H), 
-                            matrix(F), 
-                            matrix(A), 
-                            matrix(b), 
+    sol = cvxopt.solvers.qp(matrix(H),
+                            matrix(F),
+                            matrix(A),
+                            matrix(b),
                             options=options)
 
     if sol['status'] == 'optimal':
@@ -246,9 +250,9 @@ def OCBF_SecondOrderDynamics(i, one, que, ip, index, position, ilc):
         # Handle the case when no optimal solution is found
         u = matrix([0.0, 0.0])  # [-cd * m * g, 0]
 
-    a = (u[0],0,0) 
+    a = (u[0], 0, 0)
     t = [0, 0.1]
-    y0 = [x0[0],x0[1]]
+    y0 = [x0[0], x0[1]]
 
     result = odeint(second_order_model, y0, t, args=a)
     rt = [result[-1, 0], result[-1, 1], a[0]]
@@ -260,6 +264,7 @@ def OCBF_SecondOrderDynamics(i, one, que, ip, index, position, ilc):
         time.sleep(1)
 
     return rt
+
 
 def oc(i, one, que, ip):
     violation = one['violation']
@@ -343,37 +348,40 @@ def oc(i, one, que, ip):
     rt = [x, v, u]
     return rt
 
+
 def fuel_consumption(init, u, v):
     b = [0.1569, 0.02450, -0.0007415, 0.00005975]
     c = [0.07224, 0.09681, 0.001075]
 
     if u > 0:
-        result = init + 0.1 * (u * (c[0] + c[1]*v + c[2]*v**2) + (b[0] + b[1]*v + b[2]*v**2 + b[3]*v**3))
+        result = init + 0.1 * (
+                    u * (c[0] + c[1] * v + c[2] * v ** 2) + (b[0] + b[1] * v + b[2] * v ** 2 + b[3] * v ** 3))
     else:
-        result = init + 0.1 * (b[0] + b[1]*v + b[2]*v**2 + b[3]*v**3)
+        result = init + 0.1 * (b[0] + b[1] * v + b[2] * v ** 2 + b[3] * v ** 3)
 
     return result
 
+
 def main_OCBF(i, car, mod):
     order = np.zeros(len(car['table']))
-    
+
     # Extract the 31st element from each string in car.table and store in order
     for j in range(len(car['table'])):
-        order[j] = car['table'][j][30] 
+        order[j] = car['table'][j][30]
 
-    # Get the length of the resulting order array
+        # Get the length of the resulting order array
     len_order = len(order)
     for k in range(len_order):
         ip, index, position = search_for_conflictCAVS_new(car['table'], car['que1'][int(order[k])])
-        
+
         # for lane change
         # ilc = search_i_lanechange(car.que1, car.que1{k});
-        
-        #if lane change is disallowed
+
+        # if lane change is disallowed
         ilc = []
         # Example usage
         start_time = tic()
-    
+
         # Your code to measure the time for
         if mod == 1:
             rt = OCBF_SecondOrderDynamics(i, car['que1'][int(order[k])], car['que1'], ip, index, position, ilc)
@@ -390,25 +398,24 @@ def main_OCBF(i, car, mod):
 
         if rt[0] <= car['que1'][int(order[k])]['metric'][-1]:
             car['que1'][int(order[k])]['metric'][0] += 0.1
-            car['que1'][int(order[k])]['metric'][1] = fuel_consumption(car['que1'][int(order[k])]['metric'][1], rt[2], rt[1])
+            car['que1'][int(order[k])]['metric'][1] = fuel_consumption(car['que1'][int(order[k])]['metric'][1], rt[2],
+                                                                       rt[1])
             car['que1'][int(order[k])]['metric'][2] += 0.1 * 0.5 * rt[2] ** 2
     return car
 
-
-#car = {'cars': 1, 'cars1': 2, 'cars2': 0, 'Car_leaves': 0, 'Car_leavesMain': 0, 'Car_leavesMerg': 0, 'que1': [{'state': np.array([0., 10., 0.]), 'lane': 2, 'id': [3, 1.0, 2, 8, 28], 'metric': [0, 0, 0, 622.0, 309.03207887907064], 'deltaTurn': 2, 'ocpar': np.array([-0.03770785,  1.15388122,  8.8649727 , -9.43562867, 30.60055723,
+# car = {'cars': 1, 'cars1': 2, 'cars2': 0, 'Car_leaves': 0, 'Car_leavesMain': 0, 'Car_leavesMerg': 0, 'que1': [{'state': np.array([0., 10., 0.]), 'lane': 2, 'id': [3, 1.0, 2, 8, 28], 'metric': [0, 0, 0, 622.0, 309.03207887907064], 'deltaTurn': 2, 'ocpar': np.array([-0.03770785,  1.15388122,  8.8649727 , -9.43562867, 30.60055723,
 #       26.5196769 ])}], 'que2': [], 'table': [np.array([1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
 #       0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 2., 0.])]}
-#i = 10 
-#one = car['que1'][0]
-#que = car['que1']
-#ip = -1
-#index =[-1]
-#position = [-1]   
-#ilc = []
-#main_OCBF(i, car, mod=1)
+# i = 10
+# one = car['que1'][0]
+# que = car['que1']
+# ip = -1
+# index =[-1]
+# position = [-1]
+# ilc = []
+# main_OCBF(i, car, mod=1)
 
-#que1= [{'state': [1.0055808669287933, 10.111617336912635, 1.116173369126385], 'lane': 2, 'id': [3, 1.0, 2, 8, 28], 'metric': [0.1, 0.1686536214441233, 0.06229214949734727, 622.0, 309.03207887907064], 'deltaTurn': 2, 'ocpar': np.array([-0.03770785,  1.15388122,  8.8649727 , -9.43562867, 30.60055723,
+# que1= [{'state': [1.0055808669287933, 10.111617336912635, 1.116173369126385], 'lane': 2, 'id': [3, 1.0, 2, 8, 28], 'metric': [0.1, 0.1686536214441233, 0.06229214949734727, 622.0, 309.03207887907064], 'deltaTurn': 2, 'ocpar': np.array([-0.03770785,  1.15388122,  8.8649727 , -9.43562867, 30.60055723,
 #           26.5196769 ])}]
 
-#check_leave(que1)
-
+# check_leave(que1)
