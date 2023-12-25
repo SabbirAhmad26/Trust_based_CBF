@@ -17,26 +17,6 @@ for j = 1:1:length(SpoofedCarsList)
 end
 OrderSpoofedCarList= [OrderSpoofedCarList,length(order)+1];% actual order of the spoofed cars + the index of 
 
-% for j = 1:1:length(SpoofedCarsList) 
-%     index = -1;                     
-%     for jj = 1:1:length(que)
-%         if jj == SpoofedCarsList(j)
-%             continue
-%         end
-%         egocar = que{jj};
-%         [ip, ~, ~] = search_for_conflictCAVS(table, egocar);
-%         if sum(ip == SpoofedCarsList(j))
-%             index = jj;
-%             SpoofedCAVsSuccedingcarlist = [SpoofedCAVsSuccedingcarlist;index];
-%             que{jj}.overtake = 1;
-%             break
-%         end
-%     end
-%     if index == -1
-%         SpoofedCAVsSuccedingcarlist = [SpoofedCAVsSuccedingcarlist;index];
-%     end
-% end
-
 for j = 1:1:length(SpoofedCarsList)
     index = -1;                     
     for jj = order(OrderSpoofedCarList(j)+1:OrderSpoofedCarList(j+1)-1) %Looking in only cars between two consecutive spoofed cars
@@ -52,11 +32,5 @@ for j = 1:1:length(SpoofedCarsList)
     if index == -1
         SpoofedCAVsSuccedingcarlist = [SpoofedCAVsSuccedingcarlist;index];
     end
-
-
-end
-
-
-
-
+   end
 end
