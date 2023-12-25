@@ -36,13 +36,6 @@ def dynamic_test(ego):
             score = 0
     else:
         score = 0
-
-    # Check if score is 0 and set stop to 1
-    if score == 0:
-        stop = 1
-    else:
-        stop = 0
-
     return score
 
 def constraint_test(simindex, que, table, order, k, ego, trust_threshold):

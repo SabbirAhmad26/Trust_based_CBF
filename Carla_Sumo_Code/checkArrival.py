@@ -16,7 +16,7 @@ from findMP import find_MPs
 # self.sum += 1
 
 
-def check_arrival(i, init_queue, car, pen, pointer, mod, trajs):
+def check_arrival(i, init_queue, car, pen, pointer, trajs):
     l = 7 - 3.5 * math.sqrt(3)  # Suppose that the vehicle changes lanes along with the line whose slope is 30 degrees
     L = 300  # The length of the control zone, which is L1 in the paper
     w = 3.5  # Lane width
@@ -316,21 +316,19 @@ def check_arrival(i, init_queue, car, pen, pointer, mod, trajs):
         New.deltaTurn = delta_right
 
     lengths = find_MPs(init_queue[9], init_queue[10], trajs, New.j)
+
     metric = New.metric
     metric.extend([lengths[-1]])
     metric.extend(lengths.T)
-
+    #print(metric)
     New.ocpar = np.array(OCT1(0.1 * i, init_queue[6], New.metric[3]), dtype=float)
     New.prestate = np.array([-1, - 1, - 1])
-    New.phiLateral = 0.9
-    New.phiRearEnd = 0.9
-    New.k_lateral = 1 * np.ones((5, 1))
-    New.k_rear = 1
+    New.phiLateral = 1.8
+    New.phiRearEnd = 1.8
+    New.k_lateral = 0.8 * np.ones(5)
+    New.k_rear = 0.8
     New.carlength = 3.47
 
-    # if mod == 1 or mod == 2:
-    # temp = {'ocp':New.ocpar};
-    # CAV_oc.append(5) Check this!
 
     if New.metric[4] == -1:
         index = search_i_p(car['que1'], new)
@@ -383,8 +381,9 @@ def check_arrival(i, init_queue, car, pen, pointer, mod, trajs):
          "ocpar": New.ocpar, 'trust': New.trust, 'see': New.see, 'rearendconstraint': New.rearendconstraint,
          'lateralconstraint': New.lateralconstraint,
          'scores': New.scores, 'reward': New.reward, 'infeasibility': New.infeasibility, 'regret': New.regret,
-         'MUSTleave': New.MUSTleave,
-         'agent': New.agent, 'Warning': New.Warning, 'NewWarning': New.NewWarning, 'overtake': New.overtake})
+         'MUSTleave': New.MUSTleave, 'k_lateral':New.k_lateral, 'k_rear': New.k_rear,
+         'agent': New.agent, 'Warning': New.Warning, 'NewWarning': New.NewWarning, 'overtake': New.overtake,
+         'phiRearEnd':New.phiRearEnd, "phiLateral":New.phiLateral, 'carlength': New.carlength})
 
     car['cars'] += 1
     pen += 1

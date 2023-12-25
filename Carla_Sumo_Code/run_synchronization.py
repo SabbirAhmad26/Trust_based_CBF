@@ -26,6 +26,8 @@ import glob
 import os
 import sys
 import pandas as pd
+import matplotlib
+import matplotlib.pyplot as plt
 from scipy.io import loadmat
 import numpy as np
 import init
@@ -33,8 +35,8 @@ from checkArrival import check_arrival
 from scipy.integrate import odeint
 import main_OCBF as controller
 import getxy
-from control import update_table
-
+from control import update_table, OCBF_time, Event_detector, OCBF_event
+from conflictCAVS import search_for_conflictCAVS, search_for_conflictCAVS_trustversion
 try:
     sys.path.append(
         glob.glob('../../PythonAPI/carla/dist/carla-*%d.%d-%s.egg' %
@@ -265,17 +267,10 @@ def synchronization_loop(args):
     data_array3 = data3.values
     init_queue = data.values
 
-    step11 = 249
-    step6 = 149
-    step3 = 69
-    step0 = 9
-    step2 = 49
-    step10 = 229
+    L_end = 75
     simulation_step = 0
-    arrival_time = [9, 29]
     pointer = 0
     pen = 1
-    i = 0
     temp = 0
     total = len(init_queue)
     with open('Position Values for ABCD', 'r') as file:
@@ -285,134 +280,122 @@ def synchronization_loop(args):
     global cnt
 
     cnt = 0
-    L = 300
     mode = 1
-    car, metric = init.init()
+    # total = 3
+    max_range = 250
+    car, metric, CAV_e = init.init(total, max_range)
 
     try:
-        while True:
+        while simulation_step < max_range:
             start = time.time()
-            #print(traci.vehicle.getIDList())
-            # num_cars = len(traci.vehicle.getIDList())
-            # print(traci.vehicle.getIDList())
 
-            # if simulation_step == 50 and "0" in traci.vehicle.getIDList():
-
-            # print(123,traci.simulation.getArrivedIDList())
-            # if simulation_step == arrival_time[min(pointer,total-1)]:
-            # new_id = num_cars
-            # traci.vehicle.addFull(vehID=str(pointer),typeID="vehicle.micro.microlino",routeID="")
-            # pointer += 1
-            # num_cars += 1
-
-            order = []
-            identityOrder = []
-            while pointer <= total-1 and i == int(init_queue[pointer][2] * 10):
-                car, pen = check_arrival(i, init_queue[pointer], car, pen, pointer, mode, trajs)
-                # # print(result)
-                # car = result[0]
-                # pen = result[1]
-                #length = car['cars']
-                #car['order'].append(length)
-                if car['cars'] > 0:
-                    order = np.zeros(len(car['que1']))
-                    for j in range(len(car['que1'])):
-                        order[j] = j
-                    car = update_table(car, order)
+            if simulation_step >= 250:
+                stop = 1
+            while pointer <= total - 1 and simulation_step == int(init_queue[pointer][2] * 10):
+                car, pen = check_arrival(simulation_step, init_queue[pointer], car, pen, pointer, trajs)
+                length = car['cars']
                 pointer += 1
-            i += 1
-            u = 0
-
-            for vehicle in range(car['cars']):
-                car['que1'][vehicle]['prestate'] = car['que1'][vehicle]['state']
-                a = (u, 0, 0)
-                t = [0, 0.1]
-                y0 = [car['que1'][vehicle]['state'][0], car['que1'][vehicle]['state'][1]]
-
-                result = odeint(controller.second_order_model, y0, t, args=a)
-                rt = [result[-1, 0], result[-1, 1], a[0]]
+                car['order'] = np.append(car['order'], length)
+                car = update_table(car)
 
 
-                if rt[1] < 0:
-                    rt[1] = 0
+            for vehicle in car['order']:
+                vehicle = int(vehicle) - 1
+                ego = car['que1'][vehicle]
+                xi = ego['state'][0]
+                vi = ego['state'][1]
+                ui = ego['state'][2]
+                id = ego["id"][1]
 
-                if rt[0] < 0:
-                    time.sleep(1)
 
-                car['que1'][vehicle]['state'] = rt
-            # if "1" in traci.vehicle.getIDList():
-            #     pass
-            for id in range(car['cars']):
-                position = getxy.getXY(car['que1'][int(id)]['lane'], car['que1'][int(id)]['decision'], car['que1'][int(id)]['state'][0],
-                                       car['que1'][int(id)]['prestate'][0], car['que1'][int(id)]['j'], car['que1'][
-                                       int(id)]['realpose'][0], car['que1'][int(id)]['realpose'][1])
+
+                CAV_e['acc'][simulation_step, id] = ui
+                CAV_e['vel'][simulation_step, id] = vi
+                CAV_e['pos'][simulation_step, id] = xi
+
+                ip, index, position = search_for_conflictCAVS(car["table"], ego)# order is from 1 to total but indices must start from 0
+                #ip, index, position = search_for_conflictCAVS_trustversion(car['que1'], car["table"], ego, 0, 0)
+
+
+                if ip != -1:
+                    xip = car['que1'][int(ip)]['state'][0]
+                    vip = car['que1'][int(ip)]['state'][1]
+                    phiRearEnd = ego["phiRearEnd"]
+                    deltaSafetyDistance = ego["carlength"]
+                    k_rear = ego["k_rear"]
+                    ego["rearendconstraint"] = xip - xi - phiRearEnd * vi - deltaSafetyDistance
+                    CAV_e['rear_end_CBF'][simulation_step, id] = vip - vi -phiRearEnd*ui + k_rear * (
+                            xip - xi - phiRearEnd * vi - deltaSafetyDistance)
+                    CAV_e['rear_end'][simulation_step, id] = ego["rearendconstraint"]
+
+                for k in range(len(index)):
+                    if index[k] == -1:
+                        continue
+                    else:
+                        d1 = car['que1'][index[k] - 1]['metric'][position[k] + 3] - car['que1'][index[k] - 1]['state'][0]
+                        d2 = ego['metric'][k + 4] - xi
+
+                    xic = car['que1'][index[k] -1]['state'][0]
+                    vic = car['que1'][index[k] -1]['state'][1]
+                    deltaSafetyDistance = ego["carlength"]
+                    phiLateral = ego['phiLateral']
+                    k_lateral = ego['k_lateral'][k]
+                    L = ego['metric'][k + 4]
+                    bigPhi = phiLateral * xi / L
+                    CAV_e['lateral'][simulation_step, vehicle + 1] = d2 - d1 - bigPhi*vi - deltaSafetyDistance
+                    CAV_e['lateral_CBF'][simulation_step, vehicle+1] = vic - vi - phiLateral * vi**2/L - bigPhi * ui +\
+                    k_lateral*(d2 - d1 - bigPhi*vi - deltaSafetyDistance)
+
+
+                # ip_seen = -1
+                # flags = Event_detector(ego, car['que1'], ip, ip_seen, index, CAV_e)
+                # print(flags)
+                #
+                #
+                # if 1 in flags:
+                #     CAV_e["x_tk"][id][0][0] = ego['state'][0]
+                #     CAV_e["v_tk"][id][0][0] = ego['state'][1]
+
+                ego['prestate'] = ego['state']
+                ego['state'] = OCBF_time(simulation_step, ego, car['que1'], ip, index, position)
+                # ego['state'], ego['infeasibility'] = OCBF_event(simulation_step, ego, car['que1'], ip, index, position, flags)
+
+
+
+
+
+
+            for vehicle in car['order']:
+                vehicle = int(vehicle) - 1
+                ego = car['que1'][vehicle]
+                id = ego["id"][1]
+                position = getxy.getXY(ego['lane'], ego['decision'],ego['state'][0],ego['prestate'][0],ego['j'],
+                                       ego['realpose'], ego['prerealpose'])
                 positionX = position[0]
                 positionY = position[1]
                 angle = position[2]
-                car['que1'][int(id)]['j'] = position[4]
-                car['que1'][int(id)]['prerealpose'] = car['que1'][int(id)]['realpose']
-                car['que1'][int(id)]['realpose'] = [position[0], position[1]]
-                #positionX = data_array1[int(id) - 1][simulation_step]
-                #positionY = data_array2[int(id) - 1][simulation_step]
-                #angle = data_array3[int(id) - 1][simulation_step]
-                if car['que1'][int(id)]['state'][0] < 130:
-                    traci.vehicle.moveToXY(id+1, "", -1, positionX, positionY, angle)
-                print(car)
+                ego['j'] = position[3]
+                ego['prerealpose'] = ego['realpose']
+                ego['realpose'] = [position[0], position[1]]
 
-            ids = [int(element) for element in traci.vehicle.getIDList()]
-            # listid = []
-            # for id in range(car['cars']):
-            #     ID = car['que1'][int(id)]['id'][1]
-            #     listid.append(ID)
-            # for id in enumerate(ids):
-            #     if id not in listid:
+                if ego['state'][0] < ego["metric"][4]:
+                    traci.vehicle.moveToXY(id, "", -1, positionX, positionY, angle)
+
+
+
+
+
+            ids = [int(element) for element in traci.vehicle.getIDList() if element != 'carla0']
             if len(ids) - temp < 0:
                 car['que1'] = [item for item in car['que1'] if item['id'][1] in ids]
                 car['cars'] -= temp - len(ids)
+                car['order'] = car['order'][2:-1] - 1
+                car = update_table(car)
             temp = len(ids)
 
 
-            # car['que1'].remove(int(id))
-            #     del car['que1'][int(id)]
-            # print(listid)
-            # print(positionX, positionY)
-            # positionX = data_array1[2][step2]
-            # positionY = data_array2[2][step2]
-            # angle = data_array3[2][step2]
-            # if data_array1[2][step2] > 0 and data_array2[2][step2] > 0:
-            # print(step, positionX,positionY, angle)
-            #	traci.vehicle.moveToXY(2, "", -1, positionX, positionY, angle)
-            # step2 += 1
-            # positionX = data_array1[3][step3]traci.vehicle.getIDList()
-            # positionY = data_array2[3][step3]
-            # angle = data_array3[3][step3]
-            # if data_array1[3][step3] > 0 and data_array2[3][step3] > 0:
-            # print(step, positionX,positionY, angle)
-            #	traci.vehicle.moveToXY(3, "", -1, positionX, positionY, angle)
-            # step3 += 1
-            # positionX = data_array1[6][step6]
-            # positionY = data_array2[6][step6]
-            # angle = data_array3[6][step6]
-            # if data_array1[6][step6] > 0 and data_array2[6][step6] > 0:
-            # print(step, positionX,positionY, angle)
-            #	traci.vehicle.moveToXY(6, "", -1, positionX, positionY, angle)
-            # step6 += 1
 
-            # positionX = data_array1[10][step10]
-            # positionY = data_array2[10][step10]
-            # angle = data_array3[10][step10]
-            # if data_array1[10][step10] > 0 and data_array2[10][step10] > 0:
-            # print(step, positionX,positionY, angle)
-            #	traci.vehicle.moveToXY(10, "", -1, positionX, positionY, angle)
-            # step10 += 1
 
-            # positionX = data_array1[11][step11]
-            # positionY = data_array2[11][step11]
-            # angle = data_array3[11][step11]
-            # if data_array1[11][step11] > 0 and data_array2[11][step11] > 0:
-            # print(step, positionX,positionY, angle)
-            #	traci.vehicle.moveToXY(11, "", -1, positionX, positionY, angle)
-            # step11 += 1
             synchronization.tick()
             simulation_step += 1
             end = time.time()
@@ -426,6 +409,7 @@ def synchronization_loop(args):
         logging.info('Cleaning synchronization')
 
         synchronization.close()
+        return CAV_e
 
 
 if __name__ == '__main__':
@@ -485,4 +469,37 @@ if __name__ == '__main__':
     else:
         logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
 
-    synchronization_loop(arguments)
+    # synchronization_loop(arguments)
+
+
+    CAV_e = synchronization_loop(arguments)
+    pointer = 1
+    total = 5
+    dt = 0.1
+    fig, axs = plt.subplots(2, figsize=(8, 10))
+    while pointer <= total:
+        indicies = np.where(~np.isnan(CAV_e['acc'][:, pointer]))[0]
+        time_samples = dt * indicies
+
+        acceleration = CAV_e['acc'][indicies, pointer]
+        velocity = CAV_e['vel'][indicies, pointer]
+        # position = CAV_e['pos'][non_nan_indices, pointer]
+
+
+
+
+        axs[0].plot(time_samples, acceleration, linestyle='-')
+        # axs[0].set_title('Non-NaN Values vs Indices')
+        axs[0].set_xlabel('Time')
+        axs[0].set_ylabel('Acceleration')
+
+        axs[1].plot(time_samples, velocity, linestyle='-')
+        axs[1].set_xlabel('Time')
+        axs[1].set_ylabel('Velocity')
+        pointer += 1
+
+    plt.tight_layout()
+    plt.show()
+
+
+
