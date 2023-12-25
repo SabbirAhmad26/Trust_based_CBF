@@ -3,7 +3,7 @@ import sympy as sp
 
 def OCT1(t0, v0, L):
     # Define the variables
-    beta = 1
+    beta = .1
     a, b, c, d, tm = sp.symbols('a b c d tm')
 
     # Define the equations
@@ -45,6 +45,7 @@ def OCT1(t0, v0, L):
 
     return ocpar
 
-
+ocpar = OCT1(5.5,7, 74)
+a = 0
 #OCT1(0, 0.1, 1.564)
 # change the L value to the length of the road instead

@@ -1,14 +1,12 @@
 from scipy.optimize import fsolve
 import numpy as np
-# Define symbolic variables
-t0 = 5.5
-v0 = 7
-L = 74
-beta = .1
-# Set up the system of equations
+
+
 
 def OCT1(t0, v0, L):
 
+    beta = .1
+    
     # Define the system of equations as a function
     def equations(vars):
         a, b, c, d, tm = vars
