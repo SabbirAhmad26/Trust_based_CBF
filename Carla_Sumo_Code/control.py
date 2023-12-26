@@ -103,11 +103,9 @@ def  Event_detector(ego, que1, ip, ip_seen, index, CAV_e):
 
 def OCBF_time(i, one, que, ip, index, position):
 
-    vmax = 15
+    vmax = 20
     dt = 0.1
-    infeasiblity = 1
-    if one['id'][1] == 5:
-        stop = 1
+    infeasiblity = 0
     if one['state'][0] > one["metric"][-1]:
         v = 10
         u1 = 0
@@ -264,12 +262,9 @@ def OCBF_event(i, one, que, ip, index, position, flags):
         b = np.array([umax, -umin])
 
         # reference trajectory
-        if one["id"][1] == 1:
-            vd = 4
-            u_ref = 0
-        else:
-            vd = 0.5 * c[0] * t ** 2 + c[1] * t + c[2]
-            u_ref = max(c[0] * t + c[1], 0)
+
+        vd = 0.5 * c[0] * t ** 2 + c[1] * t + c[2]
+        u_ref = max(c[0] * t + c[1], 0)
 
         # CLF
         phi0 = -eps * (x0[1] - vd) ** 2
