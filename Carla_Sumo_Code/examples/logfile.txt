@@ -1,0 +1,15 @@
+***Starting server on port 42911 ***
+Loading net-file from 'net/Town05.net.xml' ... done (45ms).
+Loading done.
+Simulation started with time: 0.00
+Simulation ended at time: 407.00
+Reason: TraCI requested termination.
+Performance: 
+ Duration: 8062ms
+ Real time factor: 50.4838
+ UPS: 1663.483007
+Vehicles: 
+ Inserted: 200
+ Running: 0
+ Waiting: 0
+
