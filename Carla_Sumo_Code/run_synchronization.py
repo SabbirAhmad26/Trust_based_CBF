@@ -316,9 +316,9 @@ def synchronization_loop(args):
 
 
                 if len(ip) > 0:
-                    if ip[0] != -1:
-                        xip = car['que1'][int(ip[0])]['state'][0]
-                        vip = car['que1'][int(ip[0])]['state'][1]
+                    if ip[0] != -1: # first car in the list
+                        xip = car['que1'][int(ip[0])-1]['state'][0]
+                        vip = car['que1'][int(ip[0])-1]['state'][1]
                         phiRearEnd = ego["phiRearEnd"]
                         deltaSafetyDistance = ego["carlength"]
                         k_rear = ego["k_rear"]
