@@ -374,6 +374,16 @@ def OCBF_event(i, one, que, ip, index, position, flags):
                 def constraint(x):
                     return (-(one['metric'][k + 4] - x[1]) + (que[index_ic]['metric'][position_ic + 3] - x[3]) +
                             phiLateral/L * x[1] * x[0] + deltaSafetyDistance)
+                # Objective function
+                def objective(x):
+                    return x[2] - x[0] - phiLateral/L * x[0]**2 - phiLateral/L * x[0] * deltaSafetyDistance 
+                + k_lateral * ((one['metric'][k+3] - x[1]) - (que[index_1]['metric'][position_1 + 3] - x[3]) 
+                               - phiLateral/L * x[1] * (x[0] + deltaSafetyDistance))
+
+                # Constraint function
+                def constraint(x):
+                    return -(one.metric[k+4] - x[1]) + (que[index_1][j].metric[position_1 + 4] - 
+                                                        x[3]) + phiLateral/L * x[1] * (x[0] + deltaSafetyDistance)
 
                 rt_slack, infeasiblity = OCBF_time(i, one, que, ip, index, position)
 
@@ -385,7 +395,24 @@ def OCBF_event(i, one, que, ip, index, position, flags):
                     bounds=[(v_tk - s1, v_tk + s1), (x_tk - s2, x_tk + s2), (vl_tk - s1, vl_tk + s1), (xl_tk - s2, xl_tk + s2)]
                 )
 
+
                 fval_quad = result["fun"]
+
+                # index_1 = index[k][j]
+                # position_1 = position[k][j]
+                rt_slack = OCBF_time(i, one, que, ip, index, position)
+
+                # Optimization
+                result = minimize(
+                    fun=lambda x: objective(x), 
+                    x0=x_init,
+                    constraints={'type': 'ineq', 'fun': lambda x: constraint(x)},
+                    bounds=[(v_tk - s1, v_tk + s1), (x_tk - s2, x_tk + s2), (vl_tk - s1, vl_tk + s1), (xl_tk - s2, xl_tk + s2)]
+                )
+
+                #result = minimize(fun, x_init, bounds=list(zip(lb, ub)), f_eqcons=nonlinfcn)
+                fval_quad = result[2]  # Assuming the third element of the result corresponds to the cost value
+
 
                 if rt_slack[2] >= 0:
                     Lf_terms = fval_quad
