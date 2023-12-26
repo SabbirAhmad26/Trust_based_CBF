@@ -375,8 +375,8 @@ def synchronization_loop(args):
 
                 ego['prestate'] = ego['state']
 
-                #ego['state'], ego['infeasibility'] = OCBF_time(simulation_step, ego, car['que1'], ip, index, position)
-                ego['state'], ego['infeasibility'] = OCBF_event(simulation_step, ego, car['que1'], ip, index, position, flags)
+                ego['state'], ego['infeasibility'] = OCBF_time(simulation_step, ego, car['que1'], ip, index, position)
+                #ego['state'], ego['infeasibility'] = OCBF_event(simulation_step, ego, car['que1'], ip, index, position, flags)
 
 
             # update the position of each vehicle
