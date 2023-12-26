@@ -293,11 +293,11 @@ def synchronization_loop(args):
                 pointer += 1
                 car['order'] = np.append(car['order'], length)
                 car = update_table(car)
-                if pointer == 5:
-                    stop = 1
+
 
 
             for vehicle in car['order']:
+
                 vehicle = int(vehicle) - 1
                 ego = car['que1'][vehicle]
                 xi = ego['state'][0]
@@ -356,8 +356,8 @@ def synchronization_loop(args):
                     CAV_e["v_tk"][id][0][0] = ego['state'][1]
 
                     for k in range(len(ip)):
-                        vip = car["que1"][int(ip[k])]['state'][1]
-                        xip = car["que1"][int(ip[k])]['state'][0]
+                        vip = car["que1"][int(ip[k])-1]['state'][1]
+                        xip = car["que1"][int(ip[k])-1]['state'][0]
                         CAV_e["v_tk"][ego["id"][1]][2 + k] = vip
                         CAV_e["x_tk"][ego["id"][1]][2 + k] = xip
 
@@ -375,8 +375,8 @@ def synchronization_loop(args):
 
                 ego['prestate'] = ego['state']
 
-                ego['state'], ego['infeasibility'] = OCBF_time(simulation_step, ego, car['que1'], ip, index, position)
-                #ego['state'], ego['infeasibility'] = OCBF_event(simulation_step, ego, car['que1'], ip, index, position, flags)
+                #ego['state'], ego['infeasibility'] = OCBF_time(simulation_step, ego, car['que1'], ip, index, position)
+                ego['state'], ego['infeasibility'] = OCBF_event(simulation_step, ego, car['que1'], ip, index, position, flags)
 
 
             # update the position of each vehicle
