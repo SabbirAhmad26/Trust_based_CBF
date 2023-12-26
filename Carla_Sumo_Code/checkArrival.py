@@ -320,13 +320,12 @@ def check_arrival(i, init_queue, car, pen, pointer, trajs):
     metric = New.metric
     metric.extend([lengths[-1]])
     metric.extend(lengths.T)
-    #print(metric)
     New.ocpar = np.array(OCT1(0.1 * i, init_queue[6], New.metric[3]), dtype=float)
     New.prestate = np.array([-1, - 1, - 1])
     New.phiLateral = 1.8
-    New.phiRearEnd = 1.8
-    New.k_lateral = 0.8 * np.ones(5)
-    New.k_rear = 0.8
+    New.phiRearEnd = 0.9
+    New.k_lateral = 0.5 * np.ones(5)
+    New.k_rear = 0.5
     New.carlength = 3.47
 
 
@@ -363,7 +362,7 @@ def check_arrival(i, init_queue, car, pen, pointer, trajs):
     New.trust = [0, 0]
     New.see = []
     New.rearendconstraint = []
-    New.lateralconstraint = []
+    New.lateralconstraint = np.full((5,1), np.nan)
 
     New.scores = [np.nan, np.nan, np.nan, np.nan]
     New.reward = 0

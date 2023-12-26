@@ -267,7 +267,7 @@ def synchronization_loop(args):
     data_array3 = data3.values
     init_queue = data.values
 
-    L_end = 75
+
     simulation_step = 0
     pointer = 0
     pen = 1
@@ -280,23 +280,21 @@ def synchronization_loop(args):
     global cnt
 
     cnt = 0
-    mode = 1
-    # total = 3
-    max_range = 250
+    max_range = 400
     car, metric, CAV_e = init.init(total, max_range)
 
     try:
         while simulation_step < max_range:
             start = time.time()
 
-            if simulation_step >= 250:
-                stop = 1
             while pointer <= total - 1 and simulation_step == int(init_queue[pointer][2] * 10):
                 car, pen = check_arrival(simulation_step, init_queue[pointer], car, pen, pointer, trajs)
                 length = car['cars']
                 pointer += 1
                 car['order'] = np.append(car['order'], length)
                 car = update_table(car)
+                if pointer == 5:
+                    stop = 1
 
 
             for vehicle in car['order']:
@@ -344,19 +342,25 @@ def synchronization_loop(args):
                     k_lateral = ego['k_lateral'][k]
                     L = ego['metric'][k + 4]
                     bigPhi = phiLateral * xi / L
-                    CAV_e['lateral'][simulation_step, vehicle + 1] = d2 - d1 - bigPhi*vi - deltaSafetyDistance
-                    CAV_e['lateral_CBF'][simulation_step, vehicle+1] = vic - vi - phiLateral * vi**2/L - bigPhi * ui +\
+                    ego['lateralconstraint'][k] = d2 - d1 - bigPhi*vi - deltaSafetyDistance
+                    CAV_e['lateral'][simulation_step, id, k] = ego['lateralconstraint'][k]
+                    CAV_e['lateral_CBF'][simulation_step, id, k] = vic - vi - phiLateral * vi**2/L - bigPhi * ui +\
                     k_lateral*(d2 - d1 - bigPhi*vi - deltaSafetyDistance)
 
 
                 ip_seen = -1
                 flags = Event_detector(ego, car['que1'], ip, ip_seen, index, CAV_e)
-                # print(flags)
-                #
-                #
+
                 if 1 in flags:
                     CAV_e["x_tk"][id][0][0] = ego['state'][0]
                     CAV_e["v_tk"][id][0][0] = ego['state'][1]
+
+                    for k in range(len(ip)):
+                        vip = car["que1"][int(ip[k])]['state'][1]
+                        xip = car["que1"][int(ip[k])]['state'][0]
+                        CAV_e["v_tk"][ego["id"][1]][2 + k] = vip
+                        CAV_e["x_tk"][ego["id"][1]][2 + k] = xip
+
 
                     for k in range(len(index)):
                         for j in range(len(index[k])):
@@ -369,17 +373,13 @@ def synchronization_loop(args):
                                 CAV_e["x_tk"][ego["id"][1]][2 + k][j] = xic
 
 
-
-
                 ego['prestate'] = ego['state']
-                #ego['state'] = OCBF_time(simulation_step, ego, car['que1'], ip, index, position)
+
+                #ego['state'], ego['infeasibility'] = OCBF_time(simulation_step, ego, car['que1'], ip, index, position)
                 ego['state'], ego['infeasibility'] = OCBF_event(simulation_step, ego, car['que1'], ip, index, position, flags)
 
 
-
-
-
-
+            # update the position of each vehicle
             for vehicle in car['order']:
                 vehicle = int(vehicle) - 1
                 ego = car['que1'][vehicle]
@@ -397,9 +397,7 @@ def synchronization_loop(args):
                     traci.vehicle.moveToXY(id, "", -1, positionX, positionY, angle)
 
 
-
-
-
+            # check leave
             ids = [int(element) for element in traci.vehicle.getIDList() if element != 'carla0']
             if len(ids) - temp < 0:
                 car['que1'] = [item for item in car['que1'] if item['id'][1] in ids]
@@ -407,8 +405,6 @@ def synchronization_loop(args):
                 car['order'] = car['order'][2:-1] - 1
                 car = update_table(car)
             temp = len(ids)
-
-
 
 
             synchronization.tick()
@@ -424,7 +420,7 @@ def synchronization_loop(args):
         logging.info('Cleaning synchronization')
 
         synchronization.close()
-        return CAV_e
+        # return CAV_e
 
 
 if __name__ == '__main__':
@@ -484,37 +480,37 @@ if __name__ == '__main__':
     else:
         logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
 
-    # synchronization_loop(arguments)
+    synchronization_loop(arguments)
 
 
-    CAV_e = synchronization_loop(arguments)
-    pointer = 1
-    total = 2
-    dt = 0.1
-    fig, axs = plt.subplots(2, figsize=(8, 10))
-    while pointer <= total:
-        indicies = np.where(~np.isnan(CAV_e['acc'][:, pointer]))[0]
-        time_samples = dt * indicies
-
-        acceleration = CAV_e['acc'][indicies, pointer]
-        velocity = CAV_e['vel'][indicies, pointer]
-        # position = CAV_e['pos'][non_nan_indices, pointer]
-
-
-
-
-        axs[0].plot(time_samples, acceleration, linestyle='-')
-        # axs[0].set_title('Non-NaN Values vs Indices')
-        axs[0].set_xlabel('Time')
-        axs[0].set_ylabel('Acceleration')
-
-        axs[1].plot(time_samples, velocity, linestyle='-')
-        axs[1].set_xlabel('Time')
-        axs[1].set_ylabel('Velocity')
-        pointer += 1
-
-    plt.tight_layout()
-    plt.show()
+    # CAV_e = synchronization_loop(arguments)
+    # pointer = 1
+    # total = 5
+    # dt = 0.1
+    # fig, axs = plt.subplots(2, figsize=(8, 10))
+    # while pointer <= total:
+    #     indicies = np.where(~np.isnan(CAV_e['acc'][:, pointer]))[0]
+    #     time_samples = dt * indicies
+    #
+    #     acceleration = CAV_e['acc'][indicies, pointer]
+    #     velocity = CAV_e['vel'][indicies, pointer]
+    #     # position = CAV_e['pos'][non_nan_indices, pointer]
+    #
+    #
+    #
+    #
+    #     axs[0].plot(time_samples, acceleration, linestyle='-')
+    #     # axs[0].set_title('Non-NaN Values vs Indices')
+    #     axs[0].set_xlabel('Time')
+    #     axs[0].set_ylabel('Acceleration')
+    #
+    #     axs[1].plot(time_samples, velocity, linestyle='-')
+    #     axs[1].set_xlabel('Time')
+    #     axs[1].set_ylabel('Velocity')
+    #     pointer += 1
+    #
+    # plt.tight_layout()
+    # plt.show()
 
 
 

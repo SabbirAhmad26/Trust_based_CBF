@@ -3,7 +3,7 @@ import sympy as sp
 
 def OCT1(t0, v0, L):
     # Define the variables
-    beta = .1
+    beta = 0.1
     a, b, c, d, tm = sp.symbols('a b c d tm')
 
     # Define the equations
