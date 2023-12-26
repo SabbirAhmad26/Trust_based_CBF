@@ -402,7 +402,6 @@ def OCBF_event(i, one, que, ip, index, position, flags):
                     bounds=[(v_tk - s1, v_tk + s1), (x_tk - s2, x_tk + s2), (vl_tk - s1, vl_tk + s1), (xl_tk - s2, xl_tk + s2)]
                 )
 
-                #result = minimize(fun, x_init, bounds=list(zip(lb, ub)), f_eqcons=nonlinfcn)
                 fval_quad = result[2]  # Assuming the third element of the result corresponds to the cost value
 
                 if rt_slack[2] >= 0:
