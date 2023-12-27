@@ -1,5 +1,5 @@
 from conflictCAVS import search_for_conflictCAVS_trustversion
-global dt
+from run_synchronization import dt
 
 def Continuity(ego):
     v_max = 40

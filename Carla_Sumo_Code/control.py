@@ -16,8 +16,8 @@ import numpy as np
 #from scipy.optimize import odeint
 from main_OCBF import second_order_model
 
-global dt, u, cnt, noise1, noise2, const1, const2, const3, const4
-global s1, s2, s3, initialvelocity
+from run_synchronization import dt, u, cnt, noise1, noise2, const1, const2, const3, const4
+from run_synchronization import s1, s2, s3, initialvelocity
 
 def update_table(car):
     size = len(car["order"])
