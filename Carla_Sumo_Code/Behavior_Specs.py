@@ -2,6 +2,8 @@ from conflictCAVS import search_for_conflictCAVS_trustversion
 
 import numpy as np
 
+from run_synchronization import dt
+
 
 def continuity(ego):
     maximum_displacement = 20 # Calculated from umax and vmax
