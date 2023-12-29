@@ -2,7 +2,7 @@ from conflictCAVS import search_for_conflictCAVS_trustversion
 
 import numpy as np
 
-from run_synchronization import dt
+from metavariable import s1, s2, s3, dt, noise1, noise2, const1, const2, const3, const4
 
 
 def continuity(ego):
