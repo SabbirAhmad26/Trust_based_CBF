@@ -283,7 +283,7 @@ def synchronization_loop(args):
 
     global beta
     global cnt
-
+    s1, s2, s3 = 0.5, 0.5, 0.5
     dt = 0.1
     cnt = 0
     max_range = 800
@@ -603,6 +603,5 @@ if __name__ == '__main__':
     #
     # plt.tight_layout()
     # plt.show()
-
 
 

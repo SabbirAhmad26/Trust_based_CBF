@@ -1,7 +1,7 @@
 from conflictCAVS import search_for_conflictCAVS_trustversion
-global dt
-dt = 0.1
+
 import numpy as np
+
 
 def continuity(ego):
     maximum_displacement = 20 # Calculated from umax and vmax

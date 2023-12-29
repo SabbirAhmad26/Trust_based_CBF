@@ -1,5 +1,4 @@
 import numpy as np
-import numpy as np
 import time
 import numpy as np
 from scipy.optimize import linprog
@@ -12,14 +11,13 @@ import math
 from scipy.optimize import minimize
 from scipy.optimize import linprog
 from scipy.optimize import fmin_slsqp
-import numpy as np
 import random
 random.seed(5)
 #from scipy.optimize import odeint
 from main_OCBF import second_order_model
 
-global dt, u, cnt, noise1, noise2, const1, const2, const3, const4
-global s1, s2, s3, initialvelocity
+from run_synchronization import dt, u, cnt, noise1, noise2, const1, const2, const3, const4
+from run_synchronization import s1, s2, s3
 
 def update_table(car):
     size = len(car["order"])
@@ -50,9 +48,7 @@ def  Event_detector(ego, que, ip, index, CAV_e):
     const2 = 0
     const3 = 0
     const4 = 0
-    s1 = 0.5
-    s2 = 0.5
-    s3 = 0.7
+
 
     noise_term_position = max(abs(const1 * const2), abs(const1 * (1 - const2)))
     noise_term_speed = max(abs(const3 * const4), abs(const3 * (1 - const4)))
@@ -243,9 +239,6 @@ def OCBF_event(i, ego, que, flags):
     infeasiblity = 0
     vmax = 20
     dt = 0.1
-    s1 = 0.5
-    s2 = 0.5
-    s3 = 0.7
     # noise1 = const1 * (np.random.rand() - const2)
     # noise2 = const3 * (np.random.rand() - const4)
     x0 = ego['state']
