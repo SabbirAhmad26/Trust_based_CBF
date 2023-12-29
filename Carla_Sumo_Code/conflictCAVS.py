@@ -20,8 +20,8 @@ def search_for_conflictCAVS(table, egocar):
             flag = 0
             for j in range(k - 1, -1, -1):
                 if table[j][egocar['id'][i]] > 0:
-                    index.append(int(table[j][14]))
-                    position.append(int(table[j][egocar['id'][i]]))
+                    index.append(table[j][14])
+                    position.append(table[j][egocar['id'][i]])
                     flag = 1
                     break
 
@@ -33,8 +33,8 @@ def search_for_conflictCAVS(table, egocar):
 
 def search_for_conflictCAVS_trustversion(que, table, egocar, multiple_constraints, trust_threshold):
     if multiple_constraints == 1:
-        # trust_th = trust_threshold['high']
-        trust_th = 0.8
+        trust_th = trust_threshold['high']
+        # trust_th = 0.8
     else:
         trust_th = 0
 
@@ -49,8 +49,8 @@ def search_for_conflictCAVS_trustversion(que, table, egocar, multiple_constraint
     ip = []
     for j in range(k - 1, -1, -1):
         if table[j][13] == table[k][13]:
-            ip.append(int(table[j][14]))
-            if que[ip[-1]]['trust'][0] >= trust_th:
+            ip.append(table[j][14])
+            if que[ip[-1]-1]['trust'][0] >= trust_th:
                 break
 
     for i in range(5, len(egocar['id']) + 1):
@@ -61,10 +61,11 @@ def search_for_conflictCAVS_trustversion(que, table, egocar, multiple_constraint
         flag = 0
         for j in range(k - 1, -1, -1):
             if table[j][ego_id] > 0:
-                index[i - 5].append(int(table[j][14]))
-                position[i - 5].append(int(table[j][ego_id]))
+                index[i - 5].append(table[j][14])
+                position[i - 5].append(table[j][ego_id])
                 flag = 1
-                if que[index[i - 5][-1]]['trust'][0] >= trust_th:
+                # print(que[index[i - 5][-1]]['trust'][0],trust_th)
+                if que[index[i - 5][-1]-1]['trust'][0] >= trust_th:
                     break
         if flag == 0:
             index[i - 5].append(-1)

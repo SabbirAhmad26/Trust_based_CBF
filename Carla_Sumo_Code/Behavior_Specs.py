@@ -1,12 +1,16 @@
 from conflictCAVS import search_for_conflictCAVS_trustversion
 global dt
+dt = 0.1
+import numpy as np
 
-def Continuity(ego):
-    v_max = 40
-    u_max = 5.88
-    maximum_displacement = 20
+def continuity(ego):
+    maximum_displacement = 20 # Calculated from umax and vmax
 
-    if max(abs(ego['realpose'] - ego['prerealpose'])) >= maximum_displacement:
+    x1, y1 = ego['realpose']
+    x2, y2 = ego['prerealpose']
+    distance = np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+
+    if distance >= maximum_displacement:
         score = 0
     else:
         score = 1
@@ -21,8 +25,9 @@ def dynamic_test(ego):
     u_threshold = 0.5
     threshold = 0.3
 
-    # Calculate MeasuredAcc and Measuredpos
+    # Calculate Measured Acc and Measured pos
     measured_acc = (ego['state'][1] - ego['prestate'][1]) / dt
+
     measured_pos = (ego['state'][0] - ego['prestate'][0])
 
     # Calculate Dynamicpos
@@ -38,66 +43,89 @@ def dynamic_test(ego):
         score = 0
     return score
 
-def constraint_test(simindex, que, table, order, k, ego, trust_threshold):
+def constraint_test(simindex, que, table, ego, trust_threshold):
     # Constants
     threshold = 0
-    multiple_constraints = 0
-    stop = 0
 
-    ip, index, position = search_for_conflictCAVS_trustversion(que, table, order, k, ego, multiple_constraints, trust_threshold)
+    ip, index, position = search_for_conflictCAVS_trustversion(que, table, ego, 0, trust_threshold)
 
-    if simindex == 80 or ego['id'][1] == 9:
-        stop = 1
+    # if simindex == 80 or ego['id'][1] == 9:
+    #     stop = 1
 
     ultimate_score_rear = 0
-    score_lateral = [0] * len(ego['lateralconstraint'])
+    score_lateral = [0] * len(index)
 
     if ip and ego['rearendconstraint']:
-        if min(ego['rearendconstraint']) >= threshold or ego['infeasiblity'] == 1 or que[ip]['scores'][1] == 0 or que[ip]['trust'][0] <= trust_threshold['low']:
-            ultimate_score_rear = 1
+        for k in ip:
+            index_ip = k - 1
+            if (np.min(ego['rearendconstraint']) >= threshold or
+                    ego['infeasibility'] == 1 or
+                    que[index_ip]['scores'][1] == 0 or
+                    que[index_ip]['trust'][0] <= trust_threshold['low']):
+                ultimate_score_rear = 1
     else:
         ultimate_score_rear = 1
 
-    if ego['lateralconstraint'] and index:
-        for i, lateral_constraint in enumerate(ego['lateralconstraint'], start=1):
-            if lateral_constraint and index[i - 1][0] != -1:
-                if lateral_constraint[-1] >= threshold or ego['infeasiblity'] == 1 or que[index[i - 1][0]]['scores'][1] == 0 or que[index[i - 1][0]]['trust'][0] <= trust_threshold['low']:
-                    score_lateral[i - 1] = 1
-            else:
-                score_lateral[i - 1] = 1
-    else:
-        score_lateral = [1]
+
+    for k in range(len(index)):
+        if index[k][0] == -1:
+            score_lateral[k] = 1
+            continue
+        else:
+            if (ego['lateralconstraint'][k] >= threshold or
+                    ego['infeasibility'] == 1 or
+                    que[index[k][0]-1]['scores'][1] == 0 or
+                    que[index[k][0]-1]['trust'][0] <= trust_threshold['low']):
+                score_lateral[k] = 1
+
+
+
+    # if ego['lateralconstraint'] and index:
+    #     for i, lateral_constraint in enumerate(ego['lateralconstraint']):
+    #         print(i, lateral_constraint)
+    #         if lateral_constraint and index[i][0] != -1:
+    #             if (lateral_constraint[-1] >= threshold or
+    #                     ego['infeasibility'] == 1 or
+    #                     que[index[i][0]]['scores'][1] == 0 or
+    #                     que[index[i][0]]['trust'][0] <= trust_threshold['low']):
+    #                 score_lateral[i] = 1
+    #         else:
+    #             score_lateral[i] = 1
+    # else:
+    #     score_lateral = [1]
 
     ultimate_score_lateral = min(score_lateral)
 
     score = min(ultimate_score_lateral, ultimate_score_rear)
 
+    if score == 0:
+        stop = 1
     return score
 
 
-# Example usage
-simindex_data = 80  # Replace with your actual data
-que_data = [{}, {}, {}, {}]  # Replace with your actual data
-table_data = None  # Replace with your actual data
-order_data = None  # Replace with your actual data
-k_data = None  # Replace with your actual data
-ego_data = {
-    'id': [0, 9],
-    'rearendconstraint': [1, 2],  # Replace with your actual data
-    'lateralconstraint': [[3, 4], [5, 6]],  # Replace with your actual data
-    'infeasiblity': 0  # Replace with your actual data
-}
-trust_threshold_data = {'low': 0.1}  # Replace with your actual data
-
-score_result, stop_result = constraint_test(simindex_data, que_data, table_data, order_data, k_data, ego_data, trust_threshold_data)
-print("Score:", score_result)
-print("Stop:", stop_result)
-
-
-
-# Example usage
-ego_data = {'state': [2.0, 1.0], 'prestate': [1.0, 0.0]}
-dt = 0.1  # Set your global dt value here
-
-score_result = dynamic_test(ego_data)
-print("Score:", score_result)
+# # Example usage
+# simindex_data = 80  # Replace with your actual data
+# que_data = [{}, {}, {}, {}]  # Replace with your actual data
+# table_data = None  # Replace with your actual data
+# order_data = None  # Replace with your actual data
+# k_data = None  # Replace with your actual data
+# ego_data = {
+#     'id': [0, 9],
+#     'rearendconstraint': [1, 2],  # Replace with your actual data
+#     'lateralconstraint': [[3, 4], [5, 6]],  # Replace with your actual data
+#     'infeasiblity': 0  # Replace with your actual data
+# }
+# trust_threshold_data = {'low': 0.1}  # Replace with your actual data
+#
+# score_result, stop_result = constraint_test(simindex_data, que_data, table_data, order_data, k_data, ego_data, trust_threshold_data)
+# print("Score:", score_result)
+# print("Stop:", stop_result)
+#
+#
+#
+# # Example usage
+# ego_data = {'state': [2.0, 1.0], 'prestate': [1.0, 0.0]}
+# dt = 0.1  # Set your global dt value here
+#
+# score_result = dynamic_test(ego_data)
+# print("Score:", score_result)

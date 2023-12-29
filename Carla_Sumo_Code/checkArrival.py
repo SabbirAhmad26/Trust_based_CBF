@@ -3,7 +3,7 @@ import math
 import numpy as np
 
 # import tmin
-from OCT1 import OCT1
+from OCT1_2 import OCT1
 from get_L_1 import get_L_1
 from search_i_p import search_i_p
 from findMP import find_MPs
@@ -57,6 +57,8 @@ def check_arrival(i, init_queue, car, pen, pointer, trajs):
         new_j = 31
         str = trajs[leftb[0] + 1:straightb[0]]
         New = new(new_lane, new_id, new_metric, new_j, str, new_decision)
+        New.realpose = [init_queue[7], 0]
+
 
     # lane 2
 
@@ -68,7 +70,7 @@ def check_arrival(i, init_queue, car, pen, pointer, trajs):
         new_j = 31
         str = trajs[straightb[0] + 1:originc[0]]
         New = new(new_lane, new_id, new_metric, new_j, str, new_decision)
-
+        New.realpose = [init_queue[7], 0]
 
     elif init_queue[9] == 2 and init_queue[10] == 3:
         new_lane = 2
@@ -78,6 +80,7 @@ def check_arrival(i, init_queue, car, pen, pointer, trajs):
         new_j = 31
         str = trajs[rightb[0] + 1:leftb[0]]
         New = new(new_lane, new_id, new_metric, new_j, str, new_decision)
+        New.realpose = [init_queue[7], 0]
 
     # lane 3
 
@@ -90,6 +93,7 @@ def check_arrival(i, init_queue, car, pen, pointer, trajs):
         new_j = 31
         str = trajs[leftc[0] + 1:rightc[0]]
         New = new(new_lane, new_id, new_metric, new_j, str, new_decision)
+        New.realpose = [0, init_queue[7]]
 
     # lane 4
 
@@ -102,6 +106,7 @@ def check_arrival(i, init_queue, car, pen, pointer, trajs):
         new_j = 31
         str = trajs[straightc[0] + 1:origind[0]]
         New = new(new_lane, new_id, new_metric, new_j, str, new_decision)
+        New.realpose = [0, init_queue[7]]
 
 
     elif init_queue[9] == 4 and init_queue[10] == 3:
@@ -113,6 +118,7 @@ def check_arrival(i, init_queue, car, pen, pointer, trajs):
         new_j = 31
         str = trajs[rightc[0] + 1:straightc[0]]
         New = new(new_lane, new_id, new_metric, new_j, str, new_decision)
+        New.realpose = [0, init_queue[7]]
 
     # lane 5
 
@@ -126,6 +132,7 @@ def check_arrival(i, init_queue, car, pen, pointer, trajs):
         new_j = 1
         str = trajs[leftd[0] + 1:straightd[0]]
         New = new(new_lane, new_id, new_metric, new_j, str, new_decision)
+        New.realpose = [-init_queue[7], 0]
 
     # lane 6
     elif init_queue[9] == 6 and init_queue[10] == 1:
@@ -137,6 +144,7 @@ def check_arrival(i, init_queue, car, pen, pointer, trajs):
         new_j = 1
         str = trajs[straightd[0] + 1:]
         New = new(new_lane, new_id, new_metric, new_j, str, new_decision)
+        New.realpose = [-init_queue[7], 0]
 
     elif init_queue[9] == 6 and init_queue[10] == 3:
         new_lane = 6
@@ -147,6 +155,7 @@ def check_arrival(i, init_queue, car, pen, pointer, trajs):
         new_j = 1
         str = trajs[rightd[0] + 1:leftd[0]]
         New = new(new_lane, new_id, new_metric, new_j, str, new_decision)
+        New.realpose = [-init_queue[7], 0]
 
     # lane 7
 
@@ -159,6 +168,7 @@ def check_arrival(i, init_queue, car, pen, pointer, trajs):
         new_j = 45
         str = trajs[lefta[0] + 1:straighta[0]]
         New = new(new_lane, new_id, new_metric, new_j, str, new_decision)
+        New.realpose = [0, -init_queue[7]]
 
 
     # lane 8
@@ -171,7 +181,7 @@ def check_arrival(i, init_queue, car, pen, pointer, trajs):
         new_j = 45
         str = trajs[straighta[0] + 1:originb[0]]
         New = new(new_lane, new_id, new_metric, new_j, str, new_decision)
-
+        New.realpose = [0, -init_queue[7]]
 
     elif init_queue[9] == 8 and init_queue[10] == 3:
         new_lane = 8
@@ -181,7 +191,7 @@ def check_arrival(i, init_queue, car, pen, pointer, trajs):
         new_j = 45
         str = trajs[righta[0] + 1:lefta[0]]
         New = new(new_lane, new_id, new_metric, new_j, str, new_decision)
-
+        New.realpose = [0, -init_queue[7]]
 
     lengths = find_MPs(init_queue[9], init_queue[10], trajs, New.j)
 
@@ -192,25 +202,13 @@ def check_arrival(i, init_queue, car, pen, pointer, trajs):
     New.prestate = np.array([-1, - 1, - 1])
     New.phiLateral = 1.8
     New.phiRearEnd = 0.9
-    New.k_lateral = 0.5 * np.ones(5)
-    New.k_rear = 0.5
+    New.k_lateral = 0.2 * np.ones(5)
+    New.k_rear_end = 0.2
     New.carlength = 3.47
 
 
-    if New.metric[4] == -1:
-        index = search_i_p(car['que1'], new)
-        if len(index) == 0:
-            New.metric[4] = upperLaneChanging
-        else:
-            New.metric[4] = get_L_1(0.1 * i, New.ocpar, car['que1'][index].ocpar)
 
-        if New.metric[4] < lowerLaneChanging:
-            New.metric[4] = lowerLaneChanging
-
-        if New.metric[4] > upperLaneChanging:
-            New.metric[4] = upperLaneChanging
-
-    car['cars1'] += 1
+    car['cars'] += 1
 
     preinitial_xycoor = New.str[New.j].split(' ')
     preinitial_xcoor = preinitial_xycoor[0]
@@ -224,35 +222,34 @@ def check_arrival(i, init_queue, car, pen, pointer, trajs):
     initial_ycoor = initial_xycoor[2]
     initial_ycoor = float(initial_ycoor.replace("y=", ''))
 
-    New.realpose = [initial_xcoor, initial_ycoor]
+    New.realpose = [initial_xcoor + New.realpose[0], initial_ycoor+ New.realpose[1]]
     New.prerealpose = [preinitial_xcoor, preinitial_ycoor]
 
     New.trust = [0, 0]
     New.see = []
     New.rearendconstraint = []
     New.lateralconstraint = np.full((5,1), np.nan)
-
+    # New.lateralconstraint = []
     New.scores = [np.nan, np.nan, np.nan, np.nan]
     New.reward = 0
     New.infeasibility = 0
     New.regret = 0
-    New.MUSTleave = 0
-    New.agent = init_queue[7]
-    New.Warning = 0
-    New.NewWarning = 0
+    New.mustleave = 0
+    New.agent = init_queue[8]
+    New.warning1 = 0
+    New.warning2 = 0
     New.overtake = 0
 
-    car['que1'].append(
+    car['que'].append(
         {'state': New.state, 'prestate': New.prestate, 'realpose': New.realpose, 'prerealpose': New.prerealpose,
          'lane': New.lane, 'decision': New.decision, 'id': New.id, 'metric': New.metric, 'j': New.j,
          "ocpar": New.ocpar, 'trust': New.trust, 'see': New.see, 'rearendconstraint': New.rearendconstraint,
-         'lateralconstraint': New.lateralconstraint,
+         'lateralconstraint': New.lateralconstraint, 'ip': [], 'ic': [], 'position' :[],
          'scores': New.scores, 'reward': New.reward, 'infeasibility': New.infeasibility, 'regret': New.regret,
-         'MUSTleave': New.MUSTleave, 'k_lateral':New.k_lateral, 'k_rear': New.k_rear,
-         'agent': New.agent, 'Warning': New.Warning, 'NewWarning': New.NewWarning, 'overtake': New.overtake,
+         'mustleave': New.mustleave, 'k_lateral': New.k_lateral, 'k_rear_end': New.k_rear_end,
+         'agent': New.agent, 'warning1': New.warning1, 'warning2': New.warning2, 'overtake': New.overtake,
          'phiRearEnd':New.phiRearEnd, "phiLateral":New.phiLateral, 'carlength': New.carlength})
 
-    car['cars'] += 1
     pen += 1
     if pen >= 100:
         pen = 1

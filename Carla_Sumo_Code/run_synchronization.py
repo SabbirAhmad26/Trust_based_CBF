@@ -35,8 +35,11 @@ from checkArrival import check_arrival
 from scipy.integrate import odeint
 import main_OCBF as controller
 import getxy
-from control import update_table, OCBF_time, Event_detector, OCBF_event
+import vision
+from control import update_table, OCBF_time, Event_detector, OCBF_event, no_model_attacker,random_init_attacker,strategic_attacker,no_rule_attacker
 from conflictCAVS import search_for_conflictCAVS, search_for_conflictCAVS_trustversion
+from TrustCal import calculate_trust
+from attack_mitigation import mitigation_function
 try:
     sys.path.append(
         glob.glob('../../PythonAPI/carla/dist/carla-*%d.%d-%s.egg' %
@@ -270,8 +273,10 @@ def synchronization_loop(args):
 
     simulation_step = 0
     pointer = 0
+
     pen = 1
-    temp = 0
+    temp = []
+    s3 = 0.1
     total = len(init_queue)
     with open('Position Values for ABCD', 'r') as file:
         trajs = file.read()
@@ -279,9 +284,15 @@ def synchronization_loop(args):
     global beta
     global cnt
 
+    dt = 0.1
     cnt = 0
-    max_range = 400
+    max_range = 800
     car, metric, CAV_e = init.init(total, max_range)
+
+    trust_threshold = {'low': 0.3, 'high': 0.8}
+    trust = True
+    mitigation = False
+    update_class_k_function = True
 
     try:
         while simulation_step < max_range:
@@ -293,97 +304,157 @@ def synchronization_loop(args):
                 pointer += 1
                 car['order'] = np.append(car['order'], length)
                 car = update_table(car)
-
-
+                CAV_e['arrivalexit'][length, 0] = dt * simulation_step
+                if car['que'][length-1]['id'][1] == 28:
+                    stop = 1
+            print(simulation_step, car['order'])
 
             for vehicle in car['order']:
-
-                vehicle = int(vehicle) - 1
-                ego = car['que1'][vehicle]
+                vehicle = vehicle - 1
+                ego = car['que'][vehicle]
                 xi = ego['state'][0]
                 vi = ego['state'][1]
                 ui = ego['state'][2]
                 id = ego["id"][1]
 
-
-
                 CAV_e['acc'][simulation_step, id] = ui
                 CAV_e['vel'][simulation_step, id] = vi
                 CAV_e['pos'][simulation_step, id] = xi
 
-                #ip, index, position = search_for_conflictCAVS(car["table"], ego)# order is from 1 to total but indices must start from 0
-                ip, index, position = search_for_conflictCAVS_trustversion(car['que1'], car["table"], ego, 1, 0)
+                ego['ip'], ego['index'], ego['position'] = search_for_conflictCAVS_trustversion(car['que'],
+                                                                                                car["table"], ego, 1,
+                                                                                                trust_threshold)
+                ip, index, position = ego['ip'], ego['index'], ego['position']
 
+                if ego['agent'] == 1:
+                    ego['prestate'] = ego['state']
+                    ego['state'] = no_model_attacker(simulation_step, ego)
+                elif ego['agent'] == 2:
+                    ego['prestate'] = ego['state']
+                    ego['state'] = random_init_attacker(simulation_step, ego)
+                elif ego['agent'] == 3:
+                    ego['prestate'] = ego['state']
+                    ego['state'] = no_rule_attacker(simulation_step, ego)
+                elif ego['agent'] == 4:
+                    ego['prestate'] = ego['state']
+                    ego['state'] = strategic_attacker(simulation_step, ego)
+                else:
 
-                if len(ip) > 0:
-                    if ip[0] != -1: # first car in the list
-
-                        xip = car['que1'][int(ip[0])-1]['state'][0]
-                        vip = car['que1'][int(ip[0])-1]['state'][1]
-                        phiRearEnd = ego["phiRearEnd"]
-                        deltaSafetyDistance = ego["carlength"]
-                        k_rear = ego["k_rear"]
-                        ego["rearendconstraint"] = xip - xi - phiRearEnd * vi - deltaSafetyDistance
-                        CAV_e['rear_end_CBF'][simulation_step, id] = vip - vi -phiRearEnd*ui + k_rear * (
-                                xip - xi - phiRearEnd * vi - deltaSafetyDistance)
-                        CAV_e['rear_end'][simulation_step, id] = ego["rearendconstraint"]
-
-
-                for k in range(len(index)):
-                    if index[k][0] == -1:
-                        continue
-                    else:
-                        d1 = car['que1'][index[k][0] - 1]['metric'][position[k][0] + 3] - car['que1'][index[k][0] - 1]['state'][0]
-                        d2 = ego['metric'][k + 4] - xi
-
-                    xic = car['que1'][index[k][0] -1]['state'][0]
-                    vic = car['que1'][index[k][0] -1]['state'][1]
-                    deltaSafetyDistance = ego["carlength"]
-                    phiLateral = ego['phiLateral']
-                    k_lateral = ego['k_lateral'][k]
-                    L = ego['metric'][k + 4]
-                    bigPhi = phiLateral * xi / L
-                    ego['lateralconstraint'][k] = d2 - d1 - bigPhi*vi - deltaSafetyDistance
-                    CAV_e['lateral'][simulation_step, id, k] = ego['lateralconstraint'][k]
-                    CAV_e['lateral_CBF'][simulation_step, id, k] = vic - vi - phiLateral * vi**2/L - bigPhi * ui +\
-                    k_lateral*(d2 - d1 - bigPhi*vi - deltaSafetyDistance)
-
-
-                ip_seen = -1
-                flags = Event_detector(ego, car['que1'], ip, ip_seen, index, CAV_e)
-
-                if 1 in flags:
-                    CAV_e["x_tk"][id][0][0] = ego['state'][0]
-                    CAV_e["v_tk"][id][0][0] = ego['state'][1]
-
-                    for k in range(len(ip)):
-                        vip = car["que1"][int(ip[k])-1]['state'][1]
-                        xip = car["que1"][int(ip[k])-1]['state'][0]
-                        CAV_e["v_tk"][ego["id"][1]][2 + k] = vip
-                        CAV_e["x_tk"][ego["id"][1]][2 + k] = xip
+                    if len(ip) > 0:
+                        if ip[0] != -1: # first car in the list
+                            ip_index = ip[0] -1
+                            xip = car['que'][ip_index]['state'][0]
+                            vip = car['que'][ip_index]['state'][1]
+                            phiRearEnd = ego["phiRearEnd"]
+                            deltaSafetyDistance = ego["carlength"]
+                            k_rear = ego["k_rear_end"]
+                            ego["rearendconstraint"] = xip - xi - phiRearEnd * vi - deltaSafetyDistance
+                            CAV_e['rear_end_CBF'][simulation_step, id] = vip - vi -phiRearEnd*ui + k_rear * (
+                                    xip - xi - phiRearEnd * vi - deltaSafetyDistance)
+                            CAV_e['rear_end'][simulation_step, id] = ego["rearendconstraint"]
 
 
                     for k in range(len(index)):
-                        for j in range(len(index[k])):
-                            if index[k][j] == -1:
+                        if index[k][0] == -1:
+                            continue
+                        else:
+                            ic_index = index[k][0] - 1
+                            d1 = car['que'][ic_index]['metric'][position[k][0] + 3] - car['que'][ic_index]['state'][0]
+                            d2 = ego['metric'][k + 4] - xi
+
+                        xic = car['que'][ic_index]['state'][0]
+                        vic = car['que'][ic_index]['state'][1]
+                        deltaSafetyDistance = ego["carlength"]
+                        phiLateral = ego['phiLateral']
+                        k_lateral = ego['k_lateral'][k]
+                        L = ego['metric'][k + 4]
+                        bigPhi = phiLateral * xi / L
+                        ego['lateralconstraint'][k] = d2 - d1 - bigPhi*vi - deltaSafetyDistance
+                        CAV_e['lateral'][simulation_step, id, k] = ego['lateralconstraint'][k]
+                        CAV_e['lateral_CBF'][simulation_step, id, k] = vic - vi - phiLateral * vi**2/L - bigPhi * ui +\
+                        k_lateral*(d2 - d1 - bigPhi*vi - deltaSafetyDistance)
+
+                    ego['see'] = vision.vision(car['que'], ego)
+                    flags = Event_detector(ego, car['que'], ip, index, CAV_e)
+
+                    if 1 in flags:
+                        CAV_e["x_tk"][id][0][0] = ego['state'][0]
+                        CAV_e["v_tk"][id][0][0] = ego['state'][1]
+
+                        for k in range(len(ip)):
+                            ip_index = ip[k]-1
+                            vip = car["que"][ip_index]['state'][1]
+                            xip = car["que"][ip_index]['state'][0]
+                            CAV_e["v_tk"][ego["id"][1]][2 + k] = vip
+                            CAV_e["x_tk"][ego["id"][1]][2 + k] = xip
+
+
+                        for k in range(len(index)):
+                            for j in range(len(index[k])):
+                                if index[k][j] == -1:
+                                    continue
+                                else:
+                                    ic_index = index[k][j] - 1
+                                    vic = car["que"][ic_index]['state'][1]
+                                    xic = car["que"][ic_index]['state'][0]
+                                    CAV_e["v_tk"][ego["id"][1]][2 + k][j] = vic
+                                    CAV_e["x_tk"][ego["id"][1]][2 + k][j] = xic
+
+                        for k in range(len(ego['see'])):
+                            if car['que'][ego['see'][k]]['lane'] == ego['lane']:
+                                ip_seen_index = ego['see'][k]
+                                vip_seen = car['que'][ip_seen_index]['state'][1]
+                                xip_seen = car['que'][ip_seen_index]['state'][0]
+                                CAV_e["v_tk"][ego["id"][1]][6][k] = vip_seen
+                                CAV_e["x_tk"][ego["id"][1]][6][k] = xip_seen
+
+                    ego['prestate'] = ego['state']
+
+                    #ego['state'], ego['infeasibility'] = OCBF_time(simulation_step, ego, car['que'])
+                    ego['state'], ego['infeasibility'] = OCBF_event(simulation_step, ego, car['que'], flags)
+
+            for vehicle in car['order']:
+                if trust:
+                    vehicle = vehicle - 1
+                    ego = car['que'][vehicle]
+                    if ego['state'][0] <= ego['metric'][-1] and ~ego['mustleave']:
+                        ego['trust'][1] = ego['trust'][0]
+                        ego['score'], ego['trust'][0] = calculate_trust(ego, simulation_step, car['que'],
+                                                                     car['table'], trust_threshold)
+
+                    if update_class_k_function:
+                        if len(ego['ip']) > 0:
+                            if ego['ip'][0] != -1:  # first car in the list
+                                ip_index = ego['ip'][0] - 1
+                                ego['k_rear_end'] = np.max([car['que'][ip_index]['trust'][0] - s3, 0.2], axis = 0)
+
+                        for k in range(len(ego['index'])):
+                            if ego['index'][k][0] == -1:
                                 continue
                             else:
-                                vic = car["que1"][index[k][j] - 1]['state'][1]
-                                xic = car["que1"][index[k][j] - 1]['state'][0]
-                                CAV_e["v_tk"][ego["id"][1]][2 + k][j] = vic
-                                CAV_e["x_tk"][ego["id"][1]][2 + k][j] = xic
+                                ic_index = ego['index'][k][0] - 1
+                                ego['k_lateral'][k] = np.max([car['que'][ic_index]['trust'][0] - s3, 0.2], axis = 0)
 
+                    if (simulation_step >= CAV_e['arrivalexit'][vehicle-1, 0] /dt + 20) and \
+                        (ego['trust'][0] <= trust_threshold['low']) and (ego['trust'][0] - ego['trust'][1] <= 0.01):
+                        ego['warning1'] += 1
+                    else:
+                        ego['warning1'] = 0
 
-                ego['prestate'] = ego['state']
+                    if ego['trust'][0] < trust_threshold['low']:
+                        ego['warning2'] += 1
 
-                #ego['state'], ego['infeasibility'] = OCBF_time(simulation_step, ego, car['que1'], ip, index, position)
-                ego['state'], ego['infeasibility'] = OCBF_event(simulation_step, ego, car['que1'], ip, index, position, flags)
+                    if (ego['warning1'] >= 40 or ego['warning2'] >= 60) and mitigation:
+                        ego['mustleave'] = 1
 
+            if mitigation:
+                car['order'] = mitigation_function(car['que'], car['table'], car['order'], CAV_e)
+                car = update_table(car)
 
             # update the position of each vehicle
             for vehicle in car['order']:
                 vehicle = int(vehicle) - 1
-                ego = car['que1'][vehicle]
+                ego = car['que'][vehicle]
                 id = ego["id"][1]
                 position = getxy.getXY(ego['lane'], ego['decision'],ego['state'][0],ego['prestate'][0],ego['j'],
                                        ego['realpose'], ego['prerealpose'])
@@ -398,14 +469,34 @@ def synchronization_loop(args):
                     traci.vehicle.moveToXY(id, "", -1, positionX, positionY, angle)
 
 
-            # check leave
             ids = [int(element) for element in traci.vehicle.getIDList() if element != 'carla0']
-            if len(ids) - temp < 0:
-                car['que1'] = [item for item in car['que1'] if item['id'][1] in ids]
-                car['cars'] -= temp - len(ids)
-                car['order'] = car['order'][2:-1] - 1
+            que_ids = []
+            for kk in range(len(car['que'])):
+                que_ids.append(car['que'][kk]['id'][1])
+
+            if len(ids) - len(que_ids) < 0:
+                set0 = set(que_ids)
+                set2 = set(ids)
+                id_left_car = list(set0 - set2)
+                id_left_car.sort(reverse=True)
+                queue_row = []
+                for i in id_left_car:
+                    CAV_e['arrivalexit'][id_left_car, 1] = dt * simulation_step
+                    for k in range(car['cars']):
+                        if car['que'][k]['id'][1] == i:
+                            queue_row.append(k)
+                            break
+                queue_row.sort(reverse=True)
+                for i in range(len(queue_row)):
+                    mask = car['order'] == queue_row[i] + 1  # Create a mask for the element to remove
+                    index_in_order = np.where(mask)[0]  # Get the index where the element is located
+                    car['order'] = np.delete(car['order'], index_in_order)  # Remove the element from the array
+                    car['order'] = np.array([orders - 1 if orders > queue_row[i] + 1 else orders for orders in car['order']])
+
+
+                car['cars'] -= len(que_ids) - len(ids)
+                car['que'] = [item for item in car['que'] if item['id'][1] in ids]
                 car = update_table(car)
-            temp = len(ids)
 
 
             synchronization.tick()
@@ -486,7 +577,7 @@ if __name__ == '__main__':
 
     # CAV_e = synchronization_loop(arguments)
     # pointer = 1
-    # total = 5
+    # total = 1
     # dt = 0.1
     # fig, axs = plt.subplots(2, figsize=(8, 10))
     # while pointer <= total:

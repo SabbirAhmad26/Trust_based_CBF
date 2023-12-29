@@ -4,15 +4,12 @@ import numpy as np
 def init(total, range_val):
     car = {
         'cars': 0,
-        'cars1': 0,
-        'cars2': 0,
         'Car_leaves': 0,
         'Car_leavesMain': 0,
         'Car_leavesMerg': 0,
-        'que1': [],
-        'que2': [],
+        'que': [],
         'table': [],
-        'order': np.empty(0)
+        'order': np.empty((0), dtype=int)
     }
 
     metric = {

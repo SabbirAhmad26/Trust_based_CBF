@@ -3,10 +3,8 @@ from vision import vision
 from Behavior_Specs import dynamic_test, continuity, constraint_test
 
 
-def calculate_trust(ego, simindex, que, table, order, k, trust_threshold, order_k):
+def calculate_trust(ego, simindex, que, table, trust_threshold):
     # Constants
-    b = 1  # Set your value for 'b' here
-    r = 1  # Set your value for 'r' here
     c = 5
     lambda_val = 0.95
 
@@ -16,8 +14,8 @@ def calculate_trust(ego, simindex, que, table, order, k, trust_threshold, order_
         score0 = continuity(ego)
         if score0 > 0:
             score1 = dynamic_test(ego)
-            score2 = constraint_test(simindex, que, table, order, k, ego, trust_threshold)
-            score3 = vision(que, ego, order_k)
+            score2 = constraint_test(simindex, que, table, ego, trust_threshold)
+            score3 = np.sign(len(vision(que, ego)))
 
             # Calculate trust
             scores = np.array([score0, score1, score2, score3])

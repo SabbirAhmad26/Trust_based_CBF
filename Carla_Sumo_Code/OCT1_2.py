@@ -6,7 +6,7 @@ import numpy as np
 def OCT1(t0, v0, L):
 
     beta = .1
-    
+    ocpar = []
     # Define the system of equations as a function
     def equations(vars):
         a, b, c, d, tm = vars
@@ -30,7 +30,8 @@ def OCT1(t0, v0, L):
     if np.isreal(tmi) and t0 + 0 < tmi <= t0 + 100:
         ocpar = [ai, bi, ci, di, tmi, 0.5*ai*tmi**2 + bi*tmi + ci]
 
+    if not ocpar:
+        ocpar = [0, 0.9, v0, 0, 0 ,0]
+
     return ocpar
 
-ocpar = OCT1(5.5,7, 74)
-a = 0
