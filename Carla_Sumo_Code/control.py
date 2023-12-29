@@ -1,6 +1,5 @@
 import numpy as np
 import time
-import numpy as np
 from scipy.optimize import linprog
 from cvxopt import matrix, solvers, sqrt
 import cvxopt
