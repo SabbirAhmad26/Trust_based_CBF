@@ -9,3 +9,6 @@ const1 = 0
 const2 = 0
 const3 = 0
 const4 = 0
+max_range = 450
+L_end = 75
+trust_threshold = {'low': 0.3, 'high': 0.8}

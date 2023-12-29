@@ -21,8 +21,7 @@ import traci
 # ==================================================================================================
 # -- find carla module -----------------------------------------------------------------------------
 # ==================================================================================================
-from metavariable import s1, s2, s3, dt, noise1, noise2, const1, const2, const3, const4
-
+from metavariable import s1, s2, s3, dt, noise1, noise2, const1, const2, const3, const4, max_range,L_end,trust_threshold
 
 import glob
 import os
@@ -273,25 +272,23 @@ def synchronization_loop(args):
     init_queue = data.values
 
 
+    init_queue_spoofed = np.array([[1, 'vehicle.audi.a2', 4, 'best', '0.0.00', '-26.0.00', 5, 0, 1, 2, 3],
+                                   [2, 'vehicle.audi.a2', 4.1, 'best', '-39.0.00', '25.0.00', 5, 0, 1, 6, 3],
+                                   [3, 'vehicle.audi.a2', 4.2, 'best', '-29.0.00', '39.0.00', 5, 0, 1, 4, 3],
+                                   [4, 'vehicle.audi.a2', 4.3, 'best', '-16.0.00', '-0.0.00', 5, 0, 1, 8, 3],
+                                   [5, 'vehicle.audi.a2', 4.4, 'best', '0.0.00', '25.0.00', 5, 0, 1, 1, 2],
+                                   [6, 'vehicle.audi.a2', 4.5, 'best', '-39.0.00', '-26.0.00', 5, 0, 1, 5, 2]], dtype=object)
+    total_spooefed = len(init_queue_spoofed)
+    pointer_spoofed = 0
+
     simulation_step = 0
     pointer = 0
 
     pen = 1
-    temp = []
-    s3 = 0.1
     total = len(init_queue)
     with open('Position Values for ABCD', 'r') as file:
         trajs = file.read()
-
-    global beta
-    global cnt
-    s1, s2, s3 = 0.5, 0.5, 0.5
-    dt = 0.1
-    cnt = 0
-    max_range = 800
-    car, metric, CAV_e = init.init(total, max_range)
-
-    trust_threshold = {'low': 0.3, 'high': 0.8}
+    car, metric, CAV_e = init.init(total + total_spooefed, max_range)
     trust = True
     mitigation = False
     update_class_k_function = True
@@ -300,15 +297,24 @@ def synchronization_loop(args):
         while simulation_step < max_range:
             start = time.time()
 
-            while pointer <= total - 1 and simulation_step == int(init_queue[pointer][2] * 10):
-                car, pen = check_arrival(simulation_step, init_queue[pointer], car, pen, pointer, trajs)
+            while (pointer <= total - 1 and simulation_step == int(init_queue[pointer][2] * 10)) or\
+                   (pointer_spoofed <= total_spooefed - 1 and simulation_step == int(init_queue_spoofed[pointer_spoofed][2] * 10)):
+
+                if pointer <= total - 1 and simulation_step == int(init_queue[pointer][2] * 10):
+                    car, pen = check_arrival(simulation_step, init_queue[pointer], car, pen, trajs)
+                    pointer += 1
+                else:
+                    car, pen = check_arrival(simulation_step, init_queue_spoofed[pointer_spoofed], car, pen, trajs)
+                    pointer_spoofed += 1
+
                 length = car['cars']
-                pointer += 1
                 car['order'] = np.append(car['order'], length)
                 car = update_table(car)
                 CAV_e['arrivalexit'][length, 0] = dt * simulation_step
-                if car['que'][length-1]['id'][1] == 28:
-                    stop = 1
+
+
+
+
             print(simulation_step, car['order'])
 
             for vehicle in car['order']:
@@ -457,7 +463,6 @@ def synchronization_loop(args):
             for vehicle in car['order']:
                 vehicle = int(vehicle) - 1
                 ego = car['que'][vehicle]
-                id = ego["id"][1]
                 position = getxy.getXY(ego['lane'], ego['decision'],ego['state'][0],ego['prestate'][0],ego['j'],
                                        ego['realpose'], ego['prerealpose'])
                 positionX = position[0]
@@ -467,18 +472,28 @@ def synchronization_loop(args):
                 ego['prerealpose'] = ego['realpose']
                 ego['realpose'] = [position[0], position[1]]
 
-                if ego['state'][0] < ego["metric"][4]:
-                    traci.vehicle.moveToXY(id, "", -1, positionX, positionY, angle)
+                if ego['state'][0] < ego["metric"][4] and ego['traciID'] != -1:
+                    traci.vehicle.moveToXY(ego['traciID'], "", -1, positionX, positionY, angle)
 
 
-            ids = [int(element) for element in traci.vehicle.getIDList() if element != 'carla0']
-            que_ids = []
+            real_cars_id_traci = [int(element) for element in traci.vehicle.getIDList() if element != 'carla0']
+            spoofed_cars_id = []
+            real_cars_id_queue = []
+            curr_que_id = []
+
             for kk in range(len(car['que'])):
-                que_ids.append(car['que'][kk]['id'][1])
+                if car['que'][kk]['traciID'] == -1:
+                    if car['que'][kk]['state'][0] < car['que'][kk]['metric'][-1] + L_end:
+                        spoofed_cars_id.append(car['que'][kk]['id'][1])
+                else:
+                    if car['que'][kk]['traciID'] in real_cars_id_traci:
+                        real_cars_id_queue.append(car['que'][kk]['id'][1])
+                curr_que_id.append(car['que'][kk]['id'][1])
+            updated_cars_id = real_cars_id_queue + spoofed_cars_id
 
-            if len(ids) - len(que_ids) < 0:
-                set0 = set(que_ids)
-                set2 = set(ids)
+            if len(updated_cars_id) - len(curr_que_id) < 0:
+                set0 = set(curr_que_id)
+                set2 = set(updated_cars_id)
                 id_left_car = list(set0 - set2)
                 id_left_car.sort(reverse=True)
                 queue_row = []
@@ -496,8 +511,8 @@ def synchronization_loop(args):
                     car['order'] = np.array([orders - 1 if orders > queue_row[i] + 1 else orders for orders in car['order']])
 
 
-                car['cars'] -= len(que_ids) - len(ids)
-                car['que'] = [item for item in car['que'] if item['id'][1] in ids]
+                car['cars'] -= len(curr_que_id) - len(updated_cars_id)
+                car['que'] = [item for item in car['que'] if item['id'][1] in updated_cars_id]
                 car = update_table(car)
 
 
