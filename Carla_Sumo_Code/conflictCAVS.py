@@ -49,9 +49,10 @@ def search_for_conflictCAVS_trustversion(que, table, egocar, multiple_constraint
     ip = []
     for j in range(k - 1, -1, -1):
         if table[j][13] == table[k][13]:
-            ip.append(table[j][14])
-            if que[ip[-1]-1]['trust'][0] >= trust_th:
-                break
+            if egocar['state'][0] < egocar['metric'][-1]:
+                ip.append(table[j][14])
+                if que[ip[-1]-1]['trust'][0] >= trust_th:
+                    break
 
     for i in range(5, len(egocar['id']) + 1):
         index.append([])

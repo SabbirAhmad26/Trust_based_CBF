@@ -10,7 +10,7 @@ from findMP import find_MPs
 
 
 
-def check_arrival(i, init_queue, car, pen, pointer, trajs):
+def check_arrival(i, init_queue, car, pen, trajs):
 
     # Assuming the 6th is he action
     # action 1: go straight, 2: turn left, 3: turn right
@@ -236,15 +236,20 @@ def check_arrival(i, init_queue, car, pen, pointer, trajs):
     New.regret = 0
     New.mustleave = 0
     New.agent = init_queue[8]
+    if New.agent == 0:
+        New.traciID = init_queue[0]
+    else:
+        New.traciID = -1
     New.warning1 = 0
     New.warning2 = 0
     New.overtake = 0
+
 
     car['que'].append(
         {'state': New.state, 'prestate': New.prestate, 'realpose': New.realpose, 'prerealpose': New.prerealpose,
          'lane': New.lane, 'decision': New.decision, 'id': New.id, 'metric': New.metric, 'j': New.j,
          "ocpar": New.ocpar, 'trust': New.trust, 'see': New.see, 'rearendconstraint': New.rearendconstraint,
-         'lateralconstraint': New.lateralconstraint, 'ip': [], 'ic': [], 'position' :[],
+         'lateralconstraint': New.lateralconstraint, 'ip': [], 'ic': [], 'position' :[], 'traciID' : New.traciID,
          'scores': New.scores, 'reward': New.reward, 'infeasibility': New.infeasibility, 'regret': New.regret,
          'mustleave': New.mustleave, 'k_lateral': New.k_lateral, 'k_rear_end': New.k_rear_end,
          'agent': New.agent, 'warning1': New.warning1, 'warning2': New.warning2, 'overtake': New.overtake,
