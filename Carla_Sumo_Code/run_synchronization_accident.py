@@ -258,17 +258,9 @@ def synchronization_loop(args):
     synchronization = SimulationSynchronization(sumo_simulation, carla_simulation, args.tls_manager,
                                                 args.sync_vehicle_color, args.sync_vehicle_lights)
 
-    file_path1 = '/home/akua/Downloads/withoutmitigation/dataset_xcoor.xlsx'
-    file_path2 = '/home/akua/Downloads/withoutmitigation/dataset_ycoor.xlsx'
-    file_path3 = '/home/akua/Downloads/withoutmitigation/dataset_angle.xlsx'
+
     file_path = '/home/akua/Downloads/withoutmitigation/dataset_init.xlsx'
-    data1 = pd.read_excel(file_path1)
-    data2 = pd.read_excel(file_path2)
-    data3 = pd.read_excel(file_path3)
     data = pd.read_excel(file_path)
-    data_array1 = data1.values
-    data_array2 = data2.values
-    data_array3 = data3.values
     init_queue = data.values
 
     #
