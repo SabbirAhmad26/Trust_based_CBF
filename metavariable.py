@@ -1,0 +1,13 @@
+max_range = 450
+s1 = 0.4
+s2 = 0.5
+s3 = 0.4
+dt = 0.1
+noise1 = 0
+noise2 = 0
+const1 = 0
+const2 = 0
+const3 = 0
+const4 = 0
+L_end = 75
+trust_threshold = {'low': 0.3, 'high': 0.8}
