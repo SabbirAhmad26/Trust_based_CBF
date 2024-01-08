@@ -1,5 +1,7 @@
 # Secure Control using Robust Trust-Aware CBFs
 
+This repository contains code for the (paper, [2023]([https://arxiv.org/abs/2305.16818](https://arxiv.org/abs/2401.02306))). 
+
 # Installation
 At first, please install conda from the website. Then, please install Sumo and Carla. We have tested with Sumo version 1.19 and Carla version 0.9.14. The installation instructions can be found in the following link.
 
