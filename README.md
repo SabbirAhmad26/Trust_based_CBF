@@ -1,6 +1,6 @@
 # Secure Control using Robust Trust-Aware CBFs
 
-This repository contains code for the paper https://www.ndss-symposium.org/wp-content/uploads/vehiclesec2024-37-paper.pdf
+This repository contains code for the paper "Safe and Secure Control of Connected and Automated Vehicles: An Event-Triggered Control Approach using Trust-Aware Robust Control Barrier Functions"
 
 # Installation
 At first, please install conda from the website. Then, please install Sumo and Carla. We have tested with Sumo version 1.19 and Carla version 0.9.14. The installation instructions can be found in the following link.
